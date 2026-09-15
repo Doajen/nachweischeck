@@ -54,6 +54,7 @@ Thresholds in `rndPosture` (product policy in JSON):
 
 - `suppressIfFertigstellungFrom`: 1996 → `suppress` when Fertigstellung ≥ threshold
 - `suppressIfUmfassendModernisiertFrom`: 2016 → `suppress` when modernization is `umfassend` and `modernisierungJahr` ≥ threshold
+- `umfassend` with missing/invalid `modernisierungJahr` → `widen`, reason `umfassend_jahr_unbekannt`
 - `widenIfModernisierung`: `["unbekannt"]` → `widen`
 - else, if Fertigstellung year known and not suppressed → `primary`
 

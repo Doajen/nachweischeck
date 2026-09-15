@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nachweischeck</title>
+  <link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+  <a class="skip" href="#main">Zum Inhalt</a>
+
+  <header class="site-header">
+    <p class="brand" id="brand">Nachweischeck</p>
+    <p class="tagline">Orientierungshilfe zu Nachweiswegen (AfA, RND, Kaufpreisaufteilung, Energieausweis).</p>
+  </header>
+
+  <div id="load-banner" class="banner" hidden role="status"></div>
+
+  <main id="main">
+    <section class="gate" aria-labelledby="gate-heading">
+      <h1 id="gate-heading">Angaben zum Objekt</h1>
+      <form id="gate-form" novalidate>
+        <fieldset>
+          <legend>Anlass</legend>
+          <label><input type="radio" name="anlass" value="halten" checked> Halten</label>
+          <label><input type="radio" name="anlass" value="kaufen"> Kaufen</label>
+          <label><input type="radio" name="anlass" value="verkauf"> Verkauf</label>
+          <label><input type="radio" name="anlass" value="neu_vermietung"> Neuvermieten</label>
+        </fieldset>
+
+        <fieldset>
+          <legend>Nutzung</legend>
+          <label><input type="radio" name="nutzung" value="vermieter_wohnen" checked> Vermietet (Wohnen)</label>
+          <label><input type="radio" name="nutzung" value="eigengenutzt"> Eigengenutzt</label>
+          <label><input type="radio" name="nutzung" value="gemischt"> Gemischt</label>
+          <label><input type="radio" name="nutzung" value="nichtwohnen"> Nichtwohnen</label>
+        </fieldset>
+
+        <div class="field">
+          <label for="fertigstellungJahr">Fertigstellungsjahr</label>
+          <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
+        </div>
+
+        <fieldset>
+          <legend>Modernisierung</legend>
+          <label><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
+          <label><input type="radio" name="modernisierung" value="keine"> Keine</label>
+          <label><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
+          <label><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
+        </fieldset>
+
+        <div class="field" id="mod-jahr-wrap">
+          <label for="modernisierungJahr">Jahr der umfassenden Modernisierung (optional)</label>
+          <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
+        </div>
+
+        <fieldset>
+          <legend>Energieausweis</legend>
+          <label><input type="radio" name="ausweis" value="vorhanden"> Vorhanden</label>
+          <label><input type="radio" name="ausweis" value="nicht_vorhanden"> Nicht vorhanden</label>
+          <label><input type="radio" name="ausweis" value="unbekannt" checked> Unbekannt</label>
+        </fieldset>
+
+        <fieldset class="money">
+          <legend>Gebäudeanteil (optional, Modellrechnung)</legend>
+          <div class="field">
+            <label for="gebaeudeanteilEur">Gebäudeanteil in €</label>
+            <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
+          </div>
+          <p class="hint">Oder Kaufpreis und eigener Split-% (kein vorgegebener 62/38):</p>
+          <div class="field-row">
+            <div class="field">
+              <label for="kaufpreisEur">Kaufpreis in €</label>
+              <input type="number" id="kaufpreisEur" name="kaufpreisEur" inputmode="decimal" min="0" step="1">
+            </div>
+            <div class="field">
+              <label for="splitPct">Gebäudeanteil-%</label>
+              <input type="number" id="splitPct" name="splitPct" inputmode="decimal" min="0" max="100" step="0.1" placeholder="">
+            </div>
+          </div>
+        </fieldset>
+      </form>
+    </section>
+
+    <section id="results" class="results" aria-live="polite" hidden></section>
+  </main>
+
+  <footer class="site-footer" id="site-footer">
+    <p id="footer-meta"></p>
+    <p id="footer-disclaimer"></p>
+    <p class="legal-links">
+      <a href="#impressum">Impressum</a>
+      ·
+      <a href="#datenschutz">Datenschutz</a>
+    </p>
+    <section id="impressum" class="legal-block">
+      <h2>Impressum</h2>
+      <p id="impressum-body"></p>
+    </section>
+    <section id="datenschutz" class="legal-block">
+      <h2>Datenschutz</h2>
+      <p id="datenschutz-body"></p>
+    </section>
+  </footer>
+
+  <script src="js/calc.js"></script>
+  <script src="js/route.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

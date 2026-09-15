@@ -88,6 +88,16 @@ describe("NC.route", () => {
     assert.equal(e.cards.rnd, false);
   });
 
+  it("umfassend without year: widen, no handoff RND", () => {
+    const fx = loadFixture("umfassend-jahr-unbekannt.json");
+    const r = NC.route(fx.facts, ruleset);
+    assert.equal(r.rndPosture, "widen");
+    assert.equal(r.rndReasons.length, 1);
+    assert.equal(r.rndReasons[0], "umfassend_jahr_unbekannt");
+    assert.equal(r.handoff.rnd, false);
+    assert.equal(r.rndCta.primary, false);
+  });
+
   it("version stamp only from ruleset", () => {
     const r = NC.route(
       {

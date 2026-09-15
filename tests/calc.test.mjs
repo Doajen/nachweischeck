@@ -121,6 +121,32 @@ describe("rndPosture", () => {
     assert.equal(r.posture, "primary");
   });
 
+  it("umfassend without modernisierungJahr → widen", () => {
+    const r = NC.rndPosture(
+      {
+        fertigstellungJahr: 1966,
+        modernisierung: "umfassend",
+      },
+      ruleset
+    );
+    assert.equal(r.posture, "widen");
+    assert.equal(r.reasons.length, 1);
+    assert.equal(r.reasons[0], "umfassend_jahr_unbekannt");
+  });
+
+  it("umfassend with invalid modernisierungJahr → widen", () => {
+    const r = NC.rndPosture(
+      {
+        fertigstellungJahr: 1966,
+        modernisierung: "umfassend",
+        modernisierungJahr: "",
+      },
+      ruleset
+    );
+    assert.equal(r.posture, "widen");
+    assert.equal(r.reasons[0], "umfassend_jahr_unbekannt");
+  });
+
   it("never returns userNdJahre", () => {
     const r = NC.rndPosture(
       { fertigstellungJahr: 1966, modernisierung: "keine" },
@@ -174,6 +200,7 @@ describe("fixtures vs ruleset", () => {
     "modern-unbekannt-1966.json",
     "gemischt-single-anteil.json",
     "kpa-no-plz.json",
+    "umfassend-jahr-unbekannt.json",
   ];
 
   for (const file of files) {
@@ -194,6 +221,12 @@ describe("fixtures vs ruleset", () => {
       }
       if (fx.expect.rndPosture) {
         assert.equal(posture.posture, fx.expect.rndPosture);
+      }
+      if (fx.expect.rndReasons) {
+        assert.equal(posture.reasons.length, fx.expect.rndReasons.length);
+        for (let i = 0; i < fx.expect.rndReasons.length; i++) {
+          assert.equal(posture.reasons[i], fx.expect.rndReasons[i]);
+        }
       }
       if (fx.expect.mehrAfaNd30 != null) {
         const m = NC.mehrAfa(fx.facts.gebaeudeanteilEur, afa.satzPct, 30);

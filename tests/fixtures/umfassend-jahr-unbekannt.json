@@ -1,0 +1,16 @@
+{
+  "id": "umfassend-jahr-unbekannt",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "umfassend",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "rndPosture": "widen",
+    "rndReasons": ["umfassend_jahr_unbekannt"],
+    "handoff": { "rnd": false },
+    "rndCta": { "primary": false, "secondaryText": true }
+  }
+}

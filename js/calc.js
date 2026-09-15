@@ -125,15 +125,27 @@
       return { posture: "suppress", reasons: reasons };
     }
 
-    if (
-      facts &&
-      facts.modernisierung === "umfassend" &&
-      Number.isFinite(Number(facts.modernisierungJahr)) &&
-      Number.isFinite(modFrom) &&
-      Number(facts.modernisierungJahr) >= modFrom
-    ) {
-      reasons.push("umfassend_ab_schwelle");
-      return { posture: "suppress", reasons: reasons };
+    if (facts && facts.modernisierung === "umfassend") {
+      var modJahr = Number(facts.modernisierungJahr);
+      var modJahrOk =
+        facts.modernisierungJahr !== "" &&
+        facts.modernisierungJahr != null &&
+        Number.isFinite(modJahr) &&
+        modJahr === Math.trunc(modJahr);
+
+      if (
+        modJahrOk &&
+        Number.isFinite(modFrom) &&
+        modJahr >= modFrom
+      ) {
+        reasons.push("umfassend_ab_schwelle");
+        return { posture: "suppress", reasons: reasons };
+      }
+
+      if (!modJahrOk) {
+        reasons.push("umfassend_jahr_unbekannt");
+        return { posture: "widen", reasons: reasons };
+      }
     }
 
     if (facts && widenList.indexOf(facts.modernisierung) !== -1) {
