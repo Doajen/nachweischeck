@@ -70,6 +70,19 @@ Never invent a short user ND. Never return `userNdJahre` or equivalent. Never pr
 - `geg` — Pflicht-Orientierung enums (not a full GEG engine)
 - `copyKeys[]` — must exist in `config/copy.de.json`
 
+## GEG Anlass: Neubau in the gate
+
+`geg.pflichtAnlaesse` includes `neubau`. The gate form therefore exposes an Anlass radio **Neubau** (`value="neubau"`). Do not remove `neubau` from the ruleset without removing the radio (or vice versa).
+
 ## Affiliate config
 
-IDs and `urlTemplate` values in [`config/affiliates.json`](../config/affiliates.json) are placeholders. No live partner URLs in v0 until you replace them. Skins must never contain affiliate fields.
+IDs and `urlTemplate` values in [`config/affiliates.json`](../config/affiliates.json) are placeholders (`example.invalid`). No live partner URLs in v0 until you replace them.
+
+Skins may only set chrome: `name`, optional `logoUrl`, `footerExtra`, `accent`. If a skin object contains affiliate keys (`affiliate`, `affiliates`, `id`, `urlTemplate`, lever blocks), **ignore them** at runtime; `scripts/pack.mjs` **fails** if example skins ship those keys.
+
+## Skin resolution
+
+1. Query `?name=` (and optional `?footer=`)
+2. Same-folder `skin.json` if HTTP fetch works
+3. Else public defaults (product name only)
+

@@ -19,8 +19,19 @@ export function loadFixture(name) {
 export function loadNC() {
   const context = { console };
   context.globalThis = context;
+  // Minimal location for skin query parsing in tests
+  context.location = { search: "" };
+  context.document = {
+    getElementById: () => null,
+    documentElement: { style: { setProperty: () => {} } },
+  };
   vm.createContext(context);
-  for (const file of ["js/calc.js", "js/route.js"]) {
+  for (const file of [
+    "js/calc.js",
+    "js/route.js",
+    "js/affiliates.js",
+    "js/skin.js",
+  ]) {
     const code = readFileSync(join(root, file), "utf8");
     vm.runInContext(code, context, { filename: file });
   }

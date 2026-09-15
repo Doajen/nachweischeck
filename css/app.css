@@ -214,6 +214,66 @@ table.scenarios th {
   font-size: 1rem;
 }
 
+.skin-logo {
+  display: block;
+  max-height: 2.5rem;
+  max-width: 12rem;
+  margin-bottom: 0.5rem;
+}
+
+.kanzlei-line,
+.skin-footer-extra {
+  color: var(--ink);
+}
+
+.cta {
+  margin: 0.85rem 0 0.5rem;
+  padding: 0.65rem 0;
+  border-top: 1px dotted var(--line);
+}
+
+.cta-werbung {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 0.75rem;
+  font-weight: 650;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  margin: 0 0 0.25rem;
+  color: var(--muted);
+}
+
+.cta-vertrag {
+  font-size: 0.85rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.cta-link {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  color: var(--accent);
+}
+
+.cta-button .cta-link {
+  display: inline-block;
+  padding: 0.45rem 0.75rem;
+  border: 1px solid var(--accent);
+  text-decoration: none;
+  background: #fff;
+}
+
+.cta-text .cta-link {
+  font-weight: 500;
+}
+
+.cta-print-only {
+  display: none;
+}
+
+.handoff .cta {
+  border-top: none;
+  padding-top: 0.25rem;
+}
+
 [hidden] {
   display: none !important;
 }
@@ -244,5 +304,20 @@ table.scenarios th {
 
   input[type="radio"] {
     accent-color: #000;
+  }
+
+  .cta-link {
+    display: none !important;
+  }
+
+  .cta-print-only {
+    display: block;
+    margin: 0.25rem 0 0;
+    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  }
+
+  .cta-button {
+    border: none;
+    padding: 0.35rem 0;
   }
 }

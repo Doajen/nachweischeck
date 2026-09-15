@@ -1,5 +1,5 @@
 /**
- * Gate UI + result cards. No vendor CTAs, no persist, no cookies.
+ * Gate UI + result cards + vendor CTAs. No persist, no analytics.
  */
 (function () {
   "use strict";
@@ -7,6 +7,7 @@
   var state = {
     ruleset: null,
     copy: null,
+    skin: {},
     ready: false,
   };
 
@@ -80,9 +81,46 @@
       .replace(/"/g, "&quot;");
   }
 
+  /**
+   * CTA block: Werbung + Vertrag, then link.
+   * @param {"button"|"text"} variant
+   */
+  function renderCta(lever, slot, labelKey, variant) {
+    var url = NC.affiliates.buildUrl(lever, slot);
+    var vendor = NC.affiliates.vendorName(lever, slot);
+    if (!url) return "";
+    var label = t(labelKey);
+    var cls = variant === "text" ? "cta cta-text" : "cta cta-button";
+    return (
+      '<div class="' +
+      cls +
+      '" data-lever="' +
+      escapeHtml(lever) +
+      '" data-slot="' +
+      escapeHtml(slot) +
+      '">' +
+      '<p class="cta-werbung">' +
+      escapeHtml(t("cta.werbung")) +
+      "</p>" +
+      '<p class="cta-vertrag">' +
+      escapeHtml(t("cta.vertrag")) +
+      "</p>" +
+      '<a class="cta-link" href="' +
+      escapeHtml(url) +
+      '" target="_blank" rel="noopener noreferrer">' +
+      escapeHtml(label) +
+      "</a>" +
+      '<p class="cta-print-only">' +
+      escapeHtml(vendor) +
+      " — " +
+      escapeHtml(t("cta.werbung")) +
+      "</p>" +
+      "</div>"
+    );
+  }
+
   function renderFooter() {
     var name = t("product.name");
-    $("brand").textContent = name;
     document.title = name;
     var version = state.ruleset ? state.ruleset.version : "—";
     var stand = state.ruleset ? state.ruleset.stand : "—";
@@ -107,6 +145,7 @@
       "</p><p>" +
       escapeHtml(t("legal.keineSteuerberatung")) +
       "</p>";
+    NC.skin.apply(state.skin, t);
   }
 
   function renderAfaCard(routed) {
@@ -128,9 +167,10 @@
         readFacts().nutzung === "nichtwohnen" ||
         readFacts().nutzung === "gemischt"
       ) {
-        html += "<p class=\"note\">" + escapeHtml(t("afa.nichtwohnenHinweis")) + "</p>";
+        html +=
+          '<p class="note">' + escapeHtml(t("afa.nichtwohnenHinweis")) + "</p>";
       }
-      html += "<p class=\"note\">" + escapeHtml(t("deg5a.outOfScope")) + "</p>";
+      html += '<p class="note">' + escapeHtml(t("deg5a.outOfScope")) + "</p>";
     }
     html += "</article>";
     return html;
@@ -148,7 +188,7 @@
         escapeHtml(t("rnd.unwirtschaftlich")) +
         "</p>";
     } else if (routed.rndPosture === "widen") {
-      html += "<p class=\"note\">" + escapeHtml(t("rnd.widenNote")) + "</p>";
+      html += '<p class="note">' + escapeHtml(t("rnd.widenNote")) + "</p>";
     }
 
     if (routed.scenarios && routed.scenarios.length) {
@@ -170,7 +210,11 @@
           "</td><td>" +
           escapeHtml(formatPct(Math.round(szenSatz * 1000) / 1000)) +
           "</td>";
-        if (routed.gebaeudeanteilEur != null && sc.mehrAfa && !sc.mehrAfa.ratesOnly) {
+        if (
+          routed.gebaeudeanteilEur != null &&
+          sc.mehrAfa &&
+          !sc.mehrAfa.ratesOnly
+        ) {
           html +=
             '<td class="euro">' +
             escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) +
@@ -183,39 +227,69 @@
       html += "</tbody></table>";
     }
 
-    // No vendor CTA in Slice C — posture only shapes copy, not buttons.
+    if (routed.rndCta && routed.rndCta.primary) {
+      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    }
+    if (routed.rndCta && routed.rndCta.secondaryText) {
+      html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
+    }
+    // suppress → no RND links (both flags false / hidden)
+
     html += "</article>";
     return html;
   }
 
-  function renderKpaCard() {
-    return (
+  function renderKpaCard(routed) {
+    var html =
       '<article class="card" id="card-kpa"><h2>Kaufpreisaufteilung</h2>' +
       '<p class="modell">Modellrechnung</p>' +
       "<p>" +
       escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
-      "</p></article>"
-    );
+      "</p>";
+    if (routed.handoff && routed.handoff.kpa) {
+      html += renderCta("kpa", "primary", "cta.kpa", "button");
+    }
+    html += "</article>";
+    return html;
   }
 
   function renderAusweisCard(routed) {
-    var text;
-    if (routed.geg === "pflicht_orientierung") {
-      text =
-        "Nach den GEG-Orientierungsflags im Ruleset kann ein Energieausweis-Anlass vorliegen (Verkauf, Neuvermietung, Neubau). Das ist keine Einzelfallprüfung.";
-    } else if (routed.geg === "ausnahme_pruefen") {
-      text =
-        "Mögliche Ausnahme-Hinweise (z. B. kleines Gebäude / Denkmal) — bitte separat prüfen. Keine Feststellung durch dieses Tool.";
-    } else if (routed.geg === "vorhanden") {
-      text = "Sie haben angegeben, dass ein Energieausweis vorhanden ist.";
-    } else {
-      text = "Kein Pflichtanlass nach den hinterlegten Orientierungsflags erkennbar.";
-    }
-    return (
+    var key = "geg.keinAnlass";
+    if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
+    else if (routed.geg === "ausnahme_pruefen") key = "geg.ausnahme";
+    else if (routed.geg === "vorhanden") key = "geg.vorhanden";
+
+    var html =
       '<article class="card" id="card-ausweis"><h2>Energieausweis (Orientierung)</h2>' +
       "<p>" +
-      escapeHtml(text) +
-      "</p></article>"
+      escapeHtml(t(key)) +
+      "</p>";
+    if (routed.handoff && routed.handoff.ausweis) {
+      html += renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+    html += "</article>";
+    return html;
+  }
+
+  function renderHandoff(routed) {
+    var parts = "";
+    if (routed.handoff && routed.handoff.rnd && routed.rndCta && routed.rndCta.primary) {
+      parts += renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    }
+    if (routed.handoff && routed.handoff.kpa) {
+      parts += renderCta("kpa", "primary", "cta.kpa", "button");
+    }
+    if (routed.handoff && routed.handoff.ausweis) {
+      parts += renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+    if (!parts) return "";
+    return (
+      '<section class="handoff card" id="handoff">' +
+      "<h2>" +
+      escapeHtml(t("handoff.title")) +
+      "</h2>" +
+      parts +
+      "</section>"
     );
   }
 
@@ -228,8 +302,9 @@
 
     if (routed.cards.afa) html += renderAfaCard(routed);
     if (routed.cards.rnd) html += renderRndCard(routed);
-    if (routed.cards.kpa) html += renderKpaCard();
+    if (routed.cards.kpa) html += renderKpaCard(routed);
     if (routed.cards.ausweis) html += renderAusweisCard(routed);
+    html += renderHandoff(routed);
 
     if (!html) {
       html =
@@ -239,7 +314,6 @@
     box.innerHTML = html;
     box.hidden = false;
 
-    // Guardrail for accidental forbidden copy in the live DOM.
     var forbidden = [
       "Ihre Restnutzungsdauer",
       "Anerkennungsquote",
@@ -266,14 +340,27 @@
     });
   }
 
+  function loadRuleset() {
+    if (window.__NC_RULESET__) return Promise.resolve(window.__NC_RULESET__);
+    return loadJson("rulesets/current.json");
+  }
+
+  function loadCopy() {
+    if (window.__NC_COPY__) return Promise.resolve(window.__NC_COPY__);
+    return loadJson("config/copy.de.json");
+  }
+
   function boot() {
     Promise.all([
-      loadJson("rulesets/current.json"),
-      loadJson("config/copy.de.json"),
+      loadRuleset(),
+      loadCopy(),
+      NC.affiliates.load(loadJson),
+      NC.skin.resolve(loadJson),
     ])
       .then(function (pair) {
         state.ruleset = pair[0];
         state.copy = pair[1];
+        state.skin = pair[3] || {};
         state.ready = true;
         renderFooter();
         bindForm();
@@ -281,7 +368,7 @@
       })
       .catch(function () {
         showBanner(
-          "Ruleset/Copy konnte nicht geladen werden (z. B. file://). Bitte über http://localhost öffnen. Packed HTML folgt später. Es werden keine AfA-Sätze erfunden."
+          "Ruleset/Copy/Affiliates konnte nicht geladen werden (z. B. file://). Bitte über http://localhost öffnen oder die gepackte HTML-Datei nutzen. Es werden keine AfA-Sätze erfunden."
         );
         state.ready = false;
         $("results").hidden = true;
