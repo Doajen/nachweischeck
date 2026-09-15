@@ -1,0 +1,28 @@
+{
+  "rnd": {
+    "primary": {
+      "vendor": "Nutzungsdauer.com",
+      "urlTemplate": "https://example.invalid/rnd-primary?ref={id}",
+      "id": "PLACEHOLDER_ND"
+    },
+    "secondary": {
+      "vendor": "Sprengnetter",
+      "urlTemplate": "https://example.invalid/rnd-secondary?ref={id}",
+      "id": "PLACEHOLDER_SN"
+    }
+  },
+  "kpa": {
+    "primary": {
+      "vendor": "Kaufpreis-Aufteilung.com",
+      "urlTemplate": "https://example.invalid/kpa?ref={id}",
+      "id": "PLACEHOLDER_KPA"
+    }
+  },
+  "ausweis": {
+    "primary": {
+      "vendor": "EnergyAusweis.de",
+      "urlTemplate": "https://example.invalid/ausweis?ref={id}",
+      "id": "PLACEHOLDER_EA"
+    }
+  }
+}

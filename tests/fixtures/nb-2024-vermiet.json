@@ -1,0 +1,15 @@
+{
+  "id": "nb-2024-vermiet",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 2024,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "afa": { "satzPct": 3, "gesetzlicheNdJahre": 33, "rowId": "nr2a_fertig_ab_2023" },
+    "rndPosture": "suppress",
+    "handoff": { "rnd": false }
+  }
+}

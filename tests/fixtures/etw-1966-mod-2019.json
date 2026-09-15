@@ -1,0 +1,18 @@
+{
+  "id": "etw-1966-mod-2019",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "umfassend",
+    "modernisierungJahr": 2019,
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "afa": { "satzPct": 2, "gesetzlicheNdJahre": 50 },
+    "rndPosture": "suppress",
+    "cards": { "afa": true, "rnd": true },
+    "handoff": { "rnd": false },
+    "rndCta": { "primary": false, "hidden": true }
+  }
+}

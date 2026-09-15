@@ -1,0 +1,15 @@
+{
+  "id": "nb-2020-vermiet",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 2020,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "afa": { "satzPct": 2, "gesetzlicheNdJahre": 50 },
+    "rndPosture": "suppress",
+    "handoff": { "rnd": false }
+  }
+}

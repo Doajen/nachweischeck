@@ -1,0 +1,17 @@
+{
+  "id": "modern-unbekannt-1966",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "unbekannt",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "afa": { "satzPct": 2, "gesetzlicheNdJahre": 50 },
+    "rndPosture": "widen",
+    "cards": { "afa": true, "rnd": true },
+    "handoff": { "rnd": false },
+    "rndCta": { "primary": false, "secondaryText": true }
+  }
+}

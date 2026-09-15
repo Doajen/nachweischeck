@@ -1,0 +1,15 @@
+{
+  "id": "eigengenutzt-halten",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "eigengenutzt",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "cards": { "afa": false, "rnd": false, "ausweis": false },
+    "handoff": { "rnd": false },
+    "geg": "vorhanden"
+  }
+}

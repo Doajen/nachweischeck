@@ -1,0 +1,15 @@
+{
+  "id": "pre-1925",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1920,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden"
+  },
+  "expect": {
+    "afa": { "satzPct": 2.5, "gesetzlicheNdJahre": 40, "rowId": "nr2c_fertig_vor_1925" },
+    "rndPosture": "primary",
+    "handoff": { "rnd": true }
+  }
+}

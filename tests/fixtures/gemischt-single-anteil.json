@@ -1,0 +1,16 @@
+{
+  "id": "gemischt-single-anteil",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "gemischt",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden",
+    "gebaeudeanteilEur": 150000
+  },
+  "expect": {
+    "afa": { "satzPct": 2, "gesetzlicheNdJahre": 50 },
+    "cards": { "afa": true, "rnd": true },
+    "gebaeudeanteilEur": 150000
+  }
+}

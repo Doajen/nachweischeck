@@ -1,0 +1,18 @@
+{
+  "id": "etw-1966-unmod-vermiet",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden",
+    "gebaeudeanteilEur": 150000
+  },
+  "expect": {
+    "afa": { "satzPct": 2, "gesetzlicheNdJahre": 50, "rowId": "nr2b_fertig_1925_2022" },
+    "rndPosture": "primary",
+    "cards": { "afa": true, "rnd": true },
+    "handoff": { "rnd": true },
+    "mehrAfaNd30": 2000
+  }
+}

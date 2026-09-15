@@ -1,0 +1,15 @@
+{
+  "id": "year-unknown",
+  "facts": {
+    "anlass": "halten",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": null,
+    "modernisierung": "keine",
+    "ausweis": "unbekannt"
+  },
+  "expect": {
+    "afa": { "blocked": "fertigstellung_unbekannt" },
+    "cards": { "afa": true, "rnd": false },
+    "handoff": { "rnd": false }
+  }
+}

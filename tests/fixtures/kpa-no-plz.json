@@ -1,0 +1,16 @@
+{
+  "id": "kpa-no-plz",
+  "facts": {
+    "anlass": "kaufen",
+    "nutzung": "vermieter_wohnen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "unbekannt",
+    "kaufpreisEur": 400000
+  },
+  "expect": {
+    "gebaeudeanteilEur": null,
+    "cards": { "kpa": true },
+    "noInventedSplit": true
+  }
+}

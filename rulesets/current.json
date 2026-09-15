@@ -1,0 +1,81 @@
+{
+  "version": "2026.09.1",
+  "stand": "2026-09-15",
+  "normRefs": {
+    "estg7abs4": "§ 7 Abs. 4 EStG",
+    "estg7abs4s2": "§ 7 Abs. 4 Satz 2 EStG",
+    "bmf20230222": "BMF-Schreiben vom 22.02.2023, BStBl I S. 332",
+    "bmf20251201": "BMF-Schreiben vom 01.12.2025, IV C 3 – S 2196/00040/006/008",
+    "immowertv": "ImmoWertV",
+    "geg80": "§ 80 GEG"
+  },
+  "afa": {
+    "scope": "wohnen_nr2",
+    "note": "v0: § 7 Abs. 4 Satz 1 Nr. 2 only. Nr. 1 (Betriebsvermögen / Bauantrag) is out of v0.",
+    "rows": [
+      {
+        "id": "nr2a_fertig_ab_2023",
+        "when": { "fertigstellungAfter": "2022-12-31" },
+        "satzPct": 3,
+        "gesetzlicheNdJahre": 33,
+        "normId": "estg7abs4"
+      },
+      {
+        "id": "nr2b_fertig_1925_2022",
+        "when": {
+          "fertigstellungAfter": "1924-12-31",
+          "fertigstellungBefore": "2023-01-01"
+        },
+        "satzPct": 2,
+        "gesetzlicheNdJahre": 50,
+        "normId": "estg7abs4"
+      },
+      {
+        "id": "nr2c_fertig_vor_1925",
+        "when": { "fallback": true },
+        "satzPct": 2.5,
+        "gesetzlicheNdJahre": 40,
+        "normId": "estg7abs4"
+      }
+    ]
+  },
+  "rndScenarios": [
+    { "id": "nd30", "ndJahre": 30, "label": "Szenario ND 30" },
+    { "id": "nd25", "ndJahre": 25, "label": "Szenario ND 25" },
+    { "id": "nd20", "ndJahre": 20, "label": "Szenario ND 20" }
+  ],
+  "rndPosture": {
+    "suppressIfFertigstellungFrom": 1996,
+    "suppressIfUmfassendModernisiertFrom": 2016,
+    "widenIfModernisierung": ["unbekannt"]
+  },
+  "geg": {
+    "pflichtAnlaesse": ["verkauf", "neu_vermietung", "neubau"],
+    "keinAnlass": ["eigengenutzt_bestand_halten"],
+    "orientierungAusnahmen": ["klein_50qm", "denkmal"]
+  },
+  "copyKeys": [
+    "product.name",
+    "footer.disclaimer",
+    "rnd.rechtslage",
+    "rnd.unwirtschaftlich",
+    "rnd.widenNote",
+    "afa.nichtwohnenHinweis",
+    "kpa.arbeitshilfeVsGutachten",
+    "cta.werbung",
+    "cta.vertrag",
+    "kanzlei.noCommission",
+    "legal.keineSteuerberatung",
+    "persist.label",
+    "persist.clear",
+    "deg5a.outOfScope",
+    "impressum.betreiber",
+    "impressum.anschrift",
+    "impressum.kontakt",
+    "impressum.ustId",
+    "impressum.verantwortlich",
+    "datenschutz.keinObjektbezug",
+    "datenschutz.hosterHinweis",
+    "datenschutz.optionalPersist"
+  ]
+}
