@@ -200,9 +200,43 @@
     return "kein_anlass";
   }
 
+  /**
+   * Optional tax-cash Modellrechnung from Mehr-AfA × Grenzsatz.
+   * Empty/missing either side → ratesOnly (no invented 42%).
+   */
+  function steuerCash(mehrAfaEur, grenzsatzPct) {
+    if (!Number.isFinite(mehrAfaEur) || !Number.isFinite(grenzsatzPct)) {
+      return { modell: true, ratesOnly: true };
+    }
+    return {
+      eurJahr: mehrAfaEur * (grenzsatzPct / 100),
+      modell: true,
+    };
+  }
+
+  /**
+   * Amortisation years = Honorar / jährlicher Steuer-Cash.
+   * Empty/missing either side or non-positive cash → ratesOnly (no invented 900).
+   */
+  function amortJahre(honorarEur, steuerCashEur) {
+    if (
+      !Number.isFinite(honorarEur) ||
+      !Number.isFinite(steuerCashEur) ||
+      steuerCashEur <= 0
+    ) {
+      return { modell: true, ratesOnly: true };
+    }
+    return {
+      jahre: honorarEur / steuerCashEur,
+      modell: true,
+    };
+  }
+
   NC.afaFromFacts = afaFromFacts;
   NC.mehrAfa = mehrAfa;
   NC.resolveGebaeudeanteil = resolveGebaeudeanteil;
   NC.rndPosture = rndPosture;
   NC.gegOrientierung = gegOrientierung;
+  NC.steuerCash = steuerCash;
+  NC.amortJahre = amortJahre;
 })(typeof globalThis !== "undefined" ? globalThis : this);

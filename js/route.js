@@ -22,6 +22,48 @@
     return false;
   }
 
+  function attachScenarioExtras(entry, facts) {
+    if (!entry.mehrAfa || entry.mehrAfa.ratesOnly) return entry;
+    var steuern = NC.steuerCash(entry.mehrAfa.mehrAfaEur, facts.grenzsatzPct);
+    entry.steuerCash = steuern;
+    if (!steuern.ratesOnly) {
+      entry.amort = NC.amortJahre(facts.honorarEur, steuern.eurJahr);
+    } else {
+      entry.amort = { modell: true, ratesOnly: true };
+    }
+    return entry;
+  }
+
+  function buildKpaCompare(facts, afa) {
+    if (
+      !facts ||
+      !Number.isFinite(facts.kaufpreisEur) ||
+      !Number.isFinite(facts.splitPctA) ||
+      !Number.isFinite(facts.splitPctB) ||
+      !afa ||
+      afa.blocked ||
+      !Number.isFinite(afa.satzPct)
+    ) {
+      return null;
+    }
+    var aAnteil = facts.kaufpreisEur * (facts.splitPctA / 100);
+    var bAnteil = facts.kaufpreisEur * (facts.splitPctB / 100);
+    return {
+      a: {
+        splitPct: facts.splitPctA,
+        gebaeudeanteilEur: aAnteil,
+        afaGesetzlichEur: aAnteil * (afa.satzPct / 100),
+        modell: true,
+      },
+      b: {
+        splitPct: facts.splitPctB,
+        gebaeudeanteilEur: bAnteil,
+        afaGesetzlichEur: bAnteil * (afa.satzPct / 100),
+        modell: true,
+      },
+    };
+  }
+
   /**
    * @returns visibility + calc snapshots. Never invents userNdJahre.
    */
@@ -63,11 +105,16 @@
 
     var handoffRnd = showRnd && posture === "primary";
     var handoffKpa = showKpa;
-    var handoffAusweis = showAusweis && geg !== "kein_anlass" && geg !== "vorhanden"
-      ? true
-      : showAusweis && (geg === "pflicht_orientierung" || geg === "ausnahme_pruefen");
+    var handoffAusweis =
+      showAusweis && geg !== "kein_anlass" && geg !== "vorhanden"
+        ? true
+        : showAusweis &&
+          (geg === "pflicht_orientierung" || geg === "ausnahme_pruefen");
 
-    if (showAusweis && (anlass === "verkauf" || anlass === "neu_vermietung" || anlass === "neubau")) {
+    if (
+      showAusweis &&
+      (anlass === "verkauf" || anlass === "neu_vermietung" || anlass === "neubau")
+    ) {
       handoffAusweis = true;
     }
     if (!showAusweis) handoffAusweis = false;
@@ -88,10 +135,13 @@
         if (anteil != null) {
           var m = NC.mehrAfa(anteil, afa.satzPct, sc.ndJahre);
           entry.mehrAfa = m;
+          attachScenarioExtras(entry, facts);
         }
         scenarios.push(entry);
       }
     }
+
+    var kpaCompare = buildKpaCompare(facts, afa);
 
     return {
       cards: {
@@ -115,7 +165,10 @@
       afa: afa,
       geg: geg,
       gebaeudeanteilEur: anteil,
+      grenzsatzPct: Number.isFinite(facts.grenzsatzPct) ? facts.grenzsatzPct : null,
+      honorarEur: Number.isFinite(facts.honorarEur) ? facts.honorarEur : null,
       scenarios: scenarios,
+      kpaCompare: kpaCompare,
       version: ruleset && ruleset.version,
       stand: ruleset && ruleset.stand,
     };

@@ -17,86 +17,148 @@
 
   <div id="load-banner" class="banner" hidden role="status"></div>
 
-  <main id="main">
-    <section class="gate" aria-labelledby="gate-heading">
-      <h1 id="gate-heading">Angaben zum Objekt</h1>
+  <main id="main" class="spa">
+    <aside class="rail" aria-label="Schritte">
+      <nav class="step-nav" id="step-nav">
+        <button type="button" class="step-tab" data-step="1" aria-current="step">1 · Situation</button>
+        <button type="button" class="step-tab" data-step="2">2 · Objekt</button>
+        <button type="button" class="step-tab" data-step="3">3 · Zahlen</button>
+      </nav>
+
       <form id="gate-form" novalidate>
-        <fieldset>
-          <legend>Anlass</legend>
-          <label><input type="radio" name="anlass" value="halten" checked> Halten</label>
-          <label><input type="radio" name="anlass" value="kaufen"> Kaufen</label>
-          <label><input type="radio" name="anlass" value="verkauf"> Verkauf</label>
-          <label><input type="radio" name="anlass" value="neu_vermietung"> Neuvermieten</label>
-          <label><input type="radio" name="anlass" value="neubau"> Neubau</label>
-        </fieldset>
+        <section class="step-panel" data-step-panel="1" id="step-1">
+          <h1 id="gate-heading">Situation</h1>
+          <fieldset class="chips">
+            <legend>Anlass</legend>
+            <label class="chip"><input type="radio" name="anlass" value="halten" checked> Halten</label>
+            <label class="chip"><input type="radio" name="anlass" value="kaufen"> Kaufen</label>
+            <label class="chip"><input type="radio" name="anlass" value="verkauf"> Verkauf</label>
+            <label class="chip"><input type="radio" name="anlass" value="neu_vermietung"> Neuvermieten</label>
+            <label class="chip"><input type="radio" name="anlass" value="neubau"> Neubau</label>
+          </fieldset>
+          <fieldset class="chips">
+            <legend>Nutzung</legend>
+            <label class="chip"><input type="radio" name="nutzung" value="vermieter_wohnen" checked> Vermietet (Wohnen)</label>
+            <label class="chip"><input type="radio" name="nutzung" value="eigengenutzt"> Eigengenutzt</label>
+            <label class="chip"><input type="radio" name="nutzung" value="gemischt"> Gemischt</label>
+            <label class="chip"><input type="radio" name="nutzung" value="nichtwohnen"> Nichtwohnen</label>
+          </fieldset>
+          <fieldset class="chips">
+            <legend>Energieausweis</legend>
+            <label class="chip"><input type="radio" name="ausweis" value="vorhanden"> Vorhanden</label>
+            <label class="chip"><input type="radio" name="ausweis" value="nicht_vorhanden"> Nicht vorhanden</label>
+            <label class="chip"><input type="radio" name="ausweis" value="unbekannt" checked> Unbekannt</label>
+          </fieldset>
+        </section>
 
-        <fieldset>
-          <legend>Nutzung</legend>
-          <label><input type="radio" name="nutzung" value="vermieter_wohnen" checked> Vermietet (Wohnen)</label>
-          <label><input type="radio" name="nutzung" value="eigengenutzt"> Eigengenutzt</label>
-          <label><input type="radio" name="nutzung" value="gemischt"> Gemischt</label>
-          <label><input type="radio" name="nutzung" value="nichtwohnen"> Nichtwohnen</label>
-        </fieldset>
-
-        <div class="field">
-          <label for="fertigstellungJahr">Fertigstellungsjahr</label>
-          <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
-        </div>
-
-        <fieldset>
-          <legend>Modernisierung</legend>
-          <label><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
-          <label><input type="radio" name="modernisierung" value="keine"> Keine</label>
-          <label><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
-          <label><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
-        </fieldset>
-
-        <div class="field" id="mod-jahr-wrap">
-          <label for="modernisierungJahr">Jahr der umfassenden Modernisierung (optional)</label>
-          <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
-        </div>
-
-        <fieldset>
-          <legend>Energieausweis</legend>
-          <label><input type="radio" name="ausweis" value="vorhanden"> Vorhanden</label>
-          <label><input type="radio" name="ausweis" value="nicht_vorhanden"> Nicht vorhanden</label>
-          <label><input type="radio" name="ausweis" value="unbekannt" checked> Unbekannt</label>
-        </fieldset>
-
-        <fieldset class="money">
-          <legend>Gebäudeanteil (optional, Modellrechnung)</legend>
+        <section class="step-panel" data-step-panel="2" id="step-2" hidden>
+          <h1>Objekt</h1>
           <div class="field">
-            <label for="gebaeudeanteilEur">Gebäudeanteil in €</label>
-            <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
+            <label for="fertigstellungJahr">Fertigstellungsjahr</label>
+            <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
           </div>
-          <p class="hint">Oder Kaufpreis und eigener Split-% (kein vorgegebener 62/38):</p>
-          <div class="field-row">
-            <div class="field">
-              <label for="kaufpreisEur">Kaufpreis in €</label>
-              <input type="number" id="kaufpreisEur" name="kaufpreisEur" inputmode="decimal" min="0" step="1">
-            </div>
-            <div class="field">
-              <label for="splitPct">Gebäudeanteil-%</label>
-              <input type="number" id="splitPct" name="splitPct" inputmode="decimal" min="0" max="100" step="0.1" placeholder="">
-            </div>
+          <fieldset class="chips">
+            <legend>Modernisierung</legend>
+            <label class="chip"><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
+            <label class="chip"><input type="radio" name="modernisierung" value="keine"> Keine</label>
+            <label class="chip"><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
+            <label class="chip"><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
+          </fieldset>
+          <div class="field" id="mod-jahr-wrap">
+            <label for="modernisierungJahr">Jahr der umfassenden Modernisierung</label>
+            <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
           </div>
-        </fieldset>
-      </form>
-    </section>
+        </section>
 
-    <section id="results" class="results" aria-live="polite" hidden></section>
+        <section class="step-panel" data-step-panel="3" id="step-3" hidden>
+          <h1>Zahlen (optional)</h1>
+          <fieldset class="money">
+            <legend>Gebäudeanteil (Modellrechnung)</legend>
+            <div class="field">
+              <label for="gebaeudeanteilEur">Gebäudeanteil in €</label>
+              <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
+            </div>
+            <p class="hint">Oder Kaufpreis und eigener Split-% (kein vorgegebener 62/38):</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="kaufpreisEur">Kaufpreis in €</label>
+                <input type="number" id="kaufpreisEur" name="kaufpreisEur" inputmode="decimal" min="0" step="1">
+              </div>
+              <div class="field">
+                <label for="splitPct">Gebäudeanteil-%</label>
+                <input type="number" id="splitPct" name="splitPct" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+            </div>
+          </fieldset>
+
+          <fieldset class="money">
+            <legend id="annahme-grenz-legend">Annahme Grenzsatz %</legend>
+            <p class="hint" id="annahme-grenz-hint">Optional. Leer = keine Steuer-Cash-Spalte.</p>
+            <div class="field">
+              <label for="grenzsatzPct">Grenzsatz %</label>
+              <input type="number" id="grenzsatzPct" name="grenzsatzPct" inputmode="decimal" min="0" max="100" step="0.1">
+            </div>
+            <div class="presets" id="grenz-presets">
+              <button type="button" class="preset" data-set-grenz="30">Annahme 30 %</button>
+              <button type="button" class="preset" data-set-grenz="42">Annahme 42 %</button>
+              <button type="button" class="preset" data-set-grenz="45">Annahme 45 %</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="money">
+            <legend id="annahme-honorar-legend">Annahme Honorar €</legend>
+            <p class="hint" id="annahme-honorar-hint">Optional. Leer = keine Amortisationsangabe.</p>
+            <div class="field">
+              <label for="honorarEur">Honorar €</label>
+              <input type="number" id="honorarEur" name="honorarEur" inputmode="decimal" min="0" step="1">
+            </div>
+            <div class="presets">
+              <button type="button" class="preset" data-set-honorar="900">Annahme 900 €</button>
+            </div>
+          </fieldset>
+
+          <fieldset class="money">
+            <legend id="kpa-compare-legend">Vergleich Split A / B</legend>
+            <p class="hint" id="kpa-compare-hint">Zwei Split-% zum Vergleich — leer lassen, wenn nicht benötigt.</p>
+            <div class="field-row">
+              <div class="field">
+                <label for="splitPctA">Split A %</label>
+                <input type="number" id="splitPctA" name="splitPctA" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+              <div class="field">
+                <label for="splitPctB">Split B %</label>
+                <input type="number" id="splitPctB" name="splitPctB" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+            </div>
+          </fieldset>
+        </section>
+
+        <div class="step-actions">
+          <button type="button" id="step-prev" hidden>Zurück</button>
+          <button type="button" id="step-next">Weiter</button>
+        </div>
+      </form>
+    </aside>
+
+    <section id="results" class="dashboard results" aria-live="polite" hidden></section>
   </main>
 
   <footer class="site-footer" id="site-footer">
     <p id="footer-meta"></p>
-    <p id="footer-disclaimer"></p>
+    <p id="footer-disclaimer" class="visually-hidden"></p>
     <p id="kanzlei-line" class="kanzlei-line" hidden></p>
     <p id="skin-footer-extra" class="skin-footer-extra" hidden></p>
     <p class="legal-links">
+      <a href="#rechtslage">Rechtslage</a>
+      ·
       <a href="#impressum">Impressum</a>
       ·
       <a href="#datenschutz">Datenschutz</a>
     </p>
+    <section id="rechtslage" class="legal-block">
+      <h2>Rechtslage (RND)</h2>
+      <p id="rechtslage-body"></p>
+    </section>
     <section id="impressum" class="legal-block">
       <h2>Impressum</h2>
       <p id="impressum-body"></p>
