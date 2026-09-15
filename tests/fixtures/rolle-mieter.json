@@ -1,0 +1,12 @@
+{
+  "id": "rolle-mieter",
+  "facts": {
+    "rolle": "mieter",
+    "ausweis": "unbekannt"
+  },
+  "expect": {
+    "cards": { "afa": false, "rnd": false, "kpa": false, "ausweis": true },
+    "handoff": { "rnd": false, "kpa": false, "ausweis": true },
+    "rndCta": { "primary": false, "hidden": true }
+  }
+}

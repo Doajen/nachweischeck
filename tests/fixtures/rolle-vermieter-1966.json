@@ -1,0 +1,16 @@
+{
+  "id": "rolle-vermieter-1966",
+  "facts": {
+    "rolle": "vermieter",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden",
+    "gebaeudeanteilEur": 150000
+  },
+  "expect": {
+    "rndPosture": "primary",
+    "cards": { "afa": true, "rnd": true },
+    "handoff": { "rnd": true },
+    "rndCta": { "primary": true }
+  }
+}

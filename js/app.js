@@ -1,6 +1,6 @@
 /**
- * SPA shell: steps + dashboard tiles + one primary CTA.
- * No persist, no analytics.
+ * Role-guided SPA. No persist, no analytics.
+ * Avoids jargon: Anlass, Nutzung, primary/widen/suppress, gesetzliche ND-Größe.
  */
 (function () {
   "use strict";
@@ -10,8 +10,16 @@
     copy: null,
     skin: {},
     ready: false,
-    step: 1,
     expanded: "rnd",
+    phase: "role", // role | buy | object
+  };
+
+  var ROLE_LABEL = {
+    vermieter: "Ich vermiete schon",
+    kaeufer_vermiet: "Ich kaufe zum Vermieten",
+    kaeufer_eigen: "Ich kaufe zum Selbstwohnen",
+    verkaeufer: "Ich verkaufe",
+    mieter: "Ich bin Mieter",
   };
 
   function $(id) {
@@ -38,15 +46,37 @@
     return n;
   }
 
+  function syncHiddenFromRolle(rolle) {
+    $("rolle").value = rolle || "";
+    var mapped = NC.applyRolle({
+      rolle: rolle,
+      anlass:
+        rolle === "vermieter"
+          ? radioValue("vermieter_anlass") || "halten"
+          : undefined,
+    });
+    $("anlass").value = mapped.anlass || "";
+    $("nutzung").value = mapped.nutzung || "";
+  }
+
   function readFacts() {
+    var rolle = $("rolle").value || null;
+    if (rolle === "vermieter") {
+      syncHiddenFromRolle("vermieter");
+    }
     var facts = {
-      anlass: radioValue("anlass"),
-      nutzung: radioValue("nutzung"),
+      rolle: rolle || undefined,
+      anlass: $("anlass").value || undefined,
+      nutzung: $("nutzung").value || undefined,
       fertigstellungJahr: optionalNumber("fertigstellungJahr"),
-      modernisierung: radioValue("modernisierung"),
+      modernisierung: radioValue("modernisierung") || "unbekannt",
       modernisierungJahr: optionalNumber("modernisierungJahr"),
-      ausweis: radioValue("ausweis"),
+      ausweis: radioValue("ausweis") || "unbekannt",
     };
+    if (!facts.rolle) delete facts.rolle;
+    if (!facts.anlass) delete facts.anlass;
+    if (!facts.nutzung) delete facts.nutzung;
+
     var anteil = optionalNumber("gebaeudeanteilEur");
     var kauf = optionalNumber("kaufpreisEur");
     var split = optionalNumber("splitPct");
@@ -87,6 +117,13 @@
     return String(n).replace(".", ",") + " %";
   }
 
+  function postureLabel(posture) {
+    if (posture === "primary") return t("posture.pruefen");
+    if (posture === "widen") return t("posture.unsicher");
+    if (posture === "suppress") return t("posture.unwirtschaftlich");
+    return "";
+  }
+
   function showBanner(msg) {
     var b = $("load-banner");
     b.hidden = false;
@@ -101,56 +138,53 @@
       .replace(/"/g, "&quot;");
   }
 
-  function isDesktop() {
-    return window.matchMedia && window.matchMedia("(min-width: 800px)").matches;
+  function updateModJahrVisibility() {
+    var wrap = $("mod-jahr-wrap");
+    if (!wrap) return;
+    wrap.hidden = radioValue("modernisierung") !== "umfassend";
   }
 
-  function setStep(n) {
-    state.step = Math.max(1, Math.min(3, n));
-    var panels = document.querySelectorAll("[data-step-panel]");
-    for (var i = 0; i < panels.length; i++) {
-      var p = panels[i];
-      var sn = Number(p.getAttribute("data-step-panel"));
-      if (isDesktop()) {
-        p.hidden = false;
-      } else {
-        p.hidden = sn !== state.step;
-      }
+  function setPhase(phase) {
+    state.phase = phase;
+    $("screen-role").hidden = phase === "object";
+    $("buy-split").hidden = phase !== "buy";
+    $("role-grid").hidden = phase === "buy" || phase === "object";
+    $("screen-object").hidden = phase !== "object";
+    if (phase === "object") {
+      var rolle = $("rolle").value;
+      $("role-badge").textContent =
+        t("role.badgePrefix") + " " + (t("role." + rolle) || ROLE_LABEL[rolle] || "");
+      $("vermieter-anlass-block").hidden = rolle !== "vermieter";
+      updateModJahrVisibility();
     }
-    var tabs = document.querySelectorAll(".step-tab");
-    for (var j = 0; j < tabs.length; j++) {
-      var tab = tabs[j];
-      var ts = Number(tab.getAttribute("data-step"));
-      if (ts === state.step) tab.setAttribute("aria-current", "step");
-      else tab.removeAttribute("aria-current");
+  }
+
+  function selectRole(rolle) {
+    syncHiddenFromRolle(rolle);
+    setPhase("object");
+    renderResults();
+  }
+
+  function shouldShowDashboard(facts) {
+    if (!facts.rolle) return false;
+    if (
+      facts.rolle === "mieter" ||
+      facts.rolle === "verkaeufer" ||
+      facts.rolle === "kaeufer_eigen"
+    ) {
+      return true;
     }
-    var prev = $("step-prev");
-    var next = $("step-next");
-    if (prev && next) {
-      prev.hidden = state.step <= 1;
-      next.hidden = state.step >= 3;
-    }
-    // Mobile: dashboard after step 2
-    var dash = $("results");
-    if (dash && state.ready) {
-      if (isDesktop() || state.step >= 2) dash.hidden = false;
-      else dash.hidden = true;
-    }
+    return Number.isFinite(facts.fertigstellungJahr);
   }
 
   function renderCta(lever, slot, labelKey, variant) {
     var url = NC.affiliates.buildUrl(lever, slot);
     var vendor = NC.affiliates.vendorName(lever, slot);
     if (!url) return "";
-    var label = t(labelKey);
     var cls = variant === "text" ? "cta cta-text" : "cta cta-button";
     return (
       '<div class="' +
       cls +
-      '" data-lever="' +
-      escapeHtml(lever) +
-      '" data-slot="' +
-      escapeHtml(slot) +
       '">' +
       '<p class="cta-werbung">' +
       escapeHtml(t("cta.werbung")) +
@@ -161,7 +195,7 @@
       '<a class="cta-link" href="' +
       escapeHtml(url) +
       '" target="_blank" rel="noopener noreferrer">' +
-      escapeHtml(label) +
+      escapeHtml(t(labelKey)) +
       "</a>" +
       '<p class="cta-print-only">' +
       escapeHtml(vendor) +
@@ -170,32 +204,6 @@
       "</p>" +
       "</div>"
     );
-  }
-
-  /** One primary CTA only (no handoff strip). */
-  function renderPrimaryCta(routed) {
-    if (routed.rndCta && routed.rndCta.primary) {
-      return (
-        '<div class="primary-cta-slot">' +
-        renderCta("rnd", "primary", "cta.rndPrimary", "button") +
-        "</div>"
-      );
-    }
-    if (routed.handoff && routed.handoff.kpa) {
-      return (
-        '<div class="primary-cta-slot">' +
-        renderCta("kpa", "primary", "cta.kpa", "button") +
-        "</div>"
-      );
-    }
-    if (routed.handoff && routed.handoff.ausweis) {
-      return (
-        '<div class="primary-cta-slot">' +
-        renderCta("ausweis", "primary", "cta.ausweis", "button") +
-        "</div>"
-      );
-    }
-    return "";
   }
 
   function scenarioById(routed, id) {
@@ -247,17 +255,12 @@
       "</p><p>" +
       escapeHtml(t("legal.keineSteuerberatung")) +
       "</p>";
-    // Localize static legends after copy load
-    var gLeg = $("annahme-grenz-legend");
-    if (gLeg) gLeg.textContent = t("annahme.grenzsatz");
+    $("zahlen-summary").textContent = t("zahlen.summary");
+    $("buy-split-hint").textContent = t("role.buyHint");
     var gHint = $("annahme-grenz-hint");
     if (gHint) gHint.textContent = t("annahme.grenzsatzHint");
-    var hLeg = $("annahme-honorar-legend");
-    if (hLeg) hLeg.textContent = t("annahme.honorar");
     var hHint = $("annahme-honorar-hint");
     if (hHint) hHint.textContent = t("annahme.honorarHint");
-    var kLeg = $("kpa-compare-legend");
-    if (kLeg) kLeg.textContent = t("kpa.compareTitle");
     var kHint = $("kpa-compare-hint");
     if (kHint) kHint.textContent = t("kpa.compareHint");
     var presets = document.querySelectorAll("[data-set-grenz]");
@@ -294,22 +297,19 @@
     );
   }
 
-  function renderAfaBody(routed, facts) {
+  function renderAfaBody(routed) {
     var html = '<p class="modell">Modellrechnung</p>';
     if (routed.afa && routed.afa.blocked) {
-      html +=
-        "<p>Ohne Fertigstellungsjahr keine gesetzliche Satz-Zuordnung. Es wird kein Satz erfunden.</p>";
+      html += "<p>" + escapeHtml(t("afa.needYear")) + "</p>";
     } else if (routed.afa) {
       html +=
-        "<p>Gesetzlicher Satz: <strong>" +
+        "<p>" +
+        escapeHtml(t("afa.satzLabel")) +
+        ": <strong>" +
         escapeHtml(formatPct(routed.afa.satzPct)) +
-        "</strong> (gesetzliche ND-Größe: " +
-        escapeHtml(String(routed.afa.gesetzlicheNdJahre)) +
-        " Jahre).</p>";
-      if (facts.nutzung === "nichtwohnen" || facts.nutzung === "gemischt") {
-        html +=
-          '<p class="note">' + escapeHtml(t("afa.nichtwohnenHinweis")) + "</p>";
-      }
+        "</strong> " +
+        escapeHtml(t("afa.perYear")) +
+        ".</p>";
       html += '<p class="note">' + escapeHtml(t("deg5a.outOfScope")) + "</p>";
     }
     return html;
@@ -317,11 +317,12 @@
 
   function renderRndBody(routed) {
     var html = '<p class="modell">Modellrechnung</p>';
+    html +=
+      '<p class="note note-strong">' +
+      escapeHtml(postureLabel(routed.rndPosture)) +
+      "</p>";
     if (routed.rndPosture === "suppress") {
-      html +=
-        '<p class="note note-strong">' +
-        escapeHtml(t("rnd.unwirtschaftlich")) +
-        "</p>";
+      html += '<p class="note">' + escapeHtml(t("rnd.unwirtschaftlich")) + "</p>";
     } else if (routed.rndPosture === "widen") {
       html += '<p class="note">' + escapeHtml(t("rnd.widenNote")) + "</p>";
     }
@@ -331,8 +332,7 @@
 
     if (routed.scenarios && routed.scenarios.length) {
       html +=
-        '<table class="scenarios"><thead><tr>' +
-        "<th>Szenario</th><th>Satz</th>";
+        '<table class="scenarios"><thead><tr><th>Szenario</th><th>Satz</th>';
       if (routed.gebaeudeanteilEur != null) {
         html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
       }
@@ -349,28 +349,28 @@
           escapeHtml(formatPct(Math.round(szenSatz * 1000) / 1000)) +
           "</td>";
         if (routed.gebaeudeanteilEur != null) {
-          if (sc.mehrAfa && !sc.mehrAfa.ratesOnly) {
-            html +=
-              '<td class="euro">' +
-              escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) +
-              "</td>";
-          } else html += "<td>—</td>";
+          html +=
+            sc.mehrAfa && !sc.mehrAfa.ratesOnly
+              ? '<td class="euro">' +
+                escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) +
+                "</td>"
+              : "<td>—</td>";
         }
         if (showTax) {
-          if (sc.steuerCash && !sc.steuerCash.ratesOnly) {
-            html +=
-              '<td class="euro">' +
-              escapeHtml(formatEuro(sc.steuerCash.eurJahr)) +
-              "</td>";
-          } else html += "<td>—</td>";
+          html +=
+            sc.steuerCash && !sc.steuerCash.ratesOnly
+              ? '<td class="euro">' +
+                escapeHtml(formatEuro(sc.steuerCash.eurJahr)) +
+                "</td>"
+              : "<td>—</td>";
         }
         if (showAmort) {
-          if (sc.amort && !sc.amort.ratesOnly) {
-            html +=
-              "<td>" +
-              escapeHtml(formatNum(sc.amort.jahre, 1)) +
-              " (Modellrechnung)</td>";
-          } else html += "<td>—</td>";
+          html +=
+            sc.amort && !sc.amort.ratesOnly
+              ? "<td>" +
+                escapeHtml(formatNum(sc.amort.jahre, 1)) +
+                " (Modellrechnung)</td>"
+              : "<td>—</td>";
         }
         html += "</tr>";
       }
@@ -378,11 +378,13 @@
     }
 
     html +=
-      '<details class="rechtslage-box"><summary>Rechtslage</summary><p>' +
+      '<details class="rechtslage-box"><summary>Hintergrund</summary><p>' +
       escapeHtml(t("rnd.rechtslage")) +
       "</p></details>";
 
-    if (routed.rndCta && routed.rndCta.secondaryText) {
+    if (routed.rndCta && routed.rndCta.primary) {
+      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    } else if (routed.rndCta && routed.rndCta.secondaryText) {
       html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
     }
     return html;
@@ -395,49 +397,58 @@
       "</p>";
     if (routed.kpaCompare) {
       html +=
-        "<p><strong>" +
-        escapeHtml(t("kpa.compareTitle")) +
-        "</strong></p><ul>" +
-        "<li>A: " +
+        "<ul><li>A: " +
         escapeHtml(formatPct(routed.kpaCompare.a.splitPct)) +
         " → " +
         escapeHtml(formatEuro(routed.kpaCompare.a.gebaeudeanteilEur)) +
-        " · AfA gesetzlich " +
-        escapeHtml(formatEuro(routed.kpaCompare.a.afaGesetzlichEur)) +
-        "</li>" +
-        "<li>B: " +
+        "</li><li>B: " +
         escapeHtml(formatPct(routed.kpaCompare.b.splitPct)) +
         " → " +
         escapeHtml(formatEuro(routed.kpaCompare.b.gebaeudeanteilEur)) +
-        " · AfA gesetzlich " +
-        escapeHtml(formatEuro(routed.kpaCompare.b.afaGesetzlichEur)) +
         "</li></ul>";
+    }
+    if (routed.handoff && routed.handoff.kpa) {
+      html += renderCta("kpa", "primary", "cta.kpa", "button");
     }
     return html;
   }
 
   function renderAusweisBody(routed) {
     var key = "geg.keinAnlass";
-    if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
+    if (routed.rolle === "mieter") key = "mieter.ausweisOnly";
+    else if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
     else if (routed.geg === "ausnahme_pruefen") key = "geg.ausnahme";
     else if (routed.geg === "vorhanden") key = "geg.vorhanden";
-    return "<p>" + escapeHtml(t(key)) + "</p>";
+    var html = "<p>" + escapeHtml(t(key)) + "</p>";
+    if (routed.rolle === "mieter") {
+      html += '<p class="note">' + escapeHtml(t("mieter.forward")) + "</p>";
+    }
+    if (routed.handoff && routed.handoff.ausweis) {
+      html += renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+    return html;
   }
 
   function defaultExpanded(routed) {
     if (routed.cards.rnd) return "rnd";
+    if (routed.cards.ausweis) return "ausweis";
     if (routed.cards.afa) return "afa";
     if (routed.cards.kpa) return "kpa";
-    if (routed.cards.ausweis) return "ausweis";
-    return "rnd";
+    return "ausweis";
   }
 
   function renderResults() {
     if (!state.ready) return;
     var facts = readFacts();
-    var routed = NC.route(facts, state.ruleset);
     var box = $("results");
 
+    if (!shouldShowDashboard(facts)) {
+      box.hidden = true;
+      box.innerHTML = "";
+      return;
+    }
+
+    var routed = NC.route(facts, state.ruleset);
     if (!state.expanded || !routed.cards[state.expanded]) {
       state.expanded = defaultExpanded(routed);
     }
@@ -446,28 +457,21 @@
     if (routed.cards.afa) {
       var afaCollapsed =
         routed.afa && !routed.afa.blocked
-          ? escapeHtml(formatPct(routed.afa.satzPct))
+          ? escapeHtml(formatPct(routed.afa.satzPct)) + " " + escapeHtml(t("afa.perYear"))
           : "—";
       html += tileShell(
         "afa",
         t("tile.afa"),
         afaCollapsed,
-        renderAfaBody(routed, facts),
+        renderAfaBody(routed),
         state.expanded === "afa"
       );
     }
     if (routed.cards.rnd) {
       var nd30 = scenarioById(routed, "nd30");
-      var postureLabel = routed.rndPosture;
       var collapsed =
-        escapeHtml(postureLabel) +
+        escapeHtml(postureLabel(routed.rndPosture)) +
         (cashLine(nd30) ? " · " + escapeHtml(cashLine(nd30)) : "");
-      if (routed.rndPosture === "suppress") {
-        collapsed =
-          escapeHtml(t("rnd.unwirtschaftlich")) +
-          " · " +
-          escapeHtml(postureLabel);
-      }
       html += tileShell(
         "rnd",
         t("tile.rnd"),
@@ -480,40 +484,43 @@
       html += tileShell(
         "kpa",
         t("tile.kpa"),
-        escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 80) + "…",
+        escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 72) + "…",
         renderKpaBody(routed),
         state.expanded === "kpa"
       );
     }
     if (routed.cards.ausweis) {
-      var aKey = "geg.keinAnlass";
-      if (routed.geg === "pflicht_orientierung") aKey = "geg.pflicht";
-      else if (routed.geg === "ausnahme_pruefen") aKey = "geg.ausnahme";
-      else if (routed.geg === "vorhanden") aKey = "geg.vorhanden";
+      var aKey =
+        routed.rolle === "mieter" ? "mieter.ausweisOnly" : "geg.pflicht";
+      if (routed.rolle !== "mieter") {
+        if (routed.geg === "ausnahme_pruefen") aKey = "geg.ausnahme";
+        else if (routed.geg === "vorhanden") aKey = "geg.vorhanden";
+        else if (routed.geg === "kein_anlass") aKey = "geg.keinAnlass";
+      }
       html += tileShell(
         "ausweis",
         t("tile.ausweis"),
-        escapeHtml(t(aKey)).slice(0, 80) + "…",
+        escapeHtml(t(aKey)).slice(0, 72) + "…",
         renderAusweisBody(routed),
         state.expanded === "ausweis"
       );
     }
 
-    html += renderPrimaryCta(routed);
-
     if (!html) {
-      html =
-        '<p class="note">Mit den aktuellen Angaben werden keine Ergebnis-Karten angezeigt.</p>';
+      html = '<p class="note">' + escapeHtml(t("dashboard.empty")) + "</p>";
     }
 
     box.innerHTML = html;
-    if (isDesktop() || state.step >= 2) box.hidden = false;
-    else box.hidden = true;
+    box.hidden = false;
 
     var forbidden = [
       "Ihre Restnutzungsdauer",
       "Anerkennungsquote",
       "Steuerspar-Garantie",
+      "gesetzliche ND-Größe",
+      "primary",
+      "widen",
+      "suppress",
     ];
     var text = box.innerText || "";
     for (var i = 0; i < forbidden.length; i++) {
@@ -525,27 +532,41 @@
 
   function bindUi() {
     var form = $("gate-form");
-    form.addEventListener("input", renderResults);
+    form.addEventListener("input", function () {
+      updateModJahrVisibility();
+      renderResults();
+    });
     form.addEventListener("change", function () {
-      var wrap = $("mod-jahr-wrap");
-      if (wrap) {
-        wrap.hidden = radioValue("modernisierung") !== "umfassend";
-      }
+      updateModJahrVisibility();
+      if ($("rolle").value === "vermieter") syncHiddenFromRolle("vermieter");
       renderResults();
     });
 
-    document.getElementById("step-nav").addEventListener("click", function (e) {
-      var btn = e.target.closest("[data-step]");
+    $("role-grid").addEventListener("click", function (e) {
+      var btn = e.target.closest(".choice");
       if (!btn) return;
-      setStep(Number(btn.getAttribute("data-step")));
+      if (btn.getAttribute("data-role-group") === "kaufen") {
+        setPhase("buy");
+        return;
+      }
+      var rolle = btn.getAttribute("data-role");
+      if (rolle) selectRole(rolle);
+    });
+
+    $("buy-split").addEventListener("click", function (e) {
+      var btn = e.target.closest("[data-role]");
+      if (btn) selectRole(btn.getAttribute("data-role"));
+    });
+    $("buy-back").addEventListener("click", function () {
+      setPhase("role");
+      $("rolle").value = "";
       renderResults();
     });
-    $("step-prev").addEventListener("click", function () {
-      setStep(state.step - 1);
-      renderResults();
-    });
-    $("step-next").addEventListener("click", function () {
-      setStep(state.step + 1);
+    $("role-back").addEventListener("click", function () {
+      $("rolle").value = "";
+      $("anlass").value = "";
+      $("nutzung").value = "";
+      setPhase("role");
       renderResults();
     });
 
@@ -570,9 +591,7 @@
       }
     });
 
-    window.addEventListener("resize", function () {
-      setStep(state.step);
-    });
+    updateModJahrVisibility();
   }
 
   function loadJson(path) {
@@ -582,20 +601,14 @@
     });
   }
 
-  function loadRuleset() {
-    if (window.__NC_RULESET__) return Promise.resolve(window.__NC_RULESET__);
-    return loadJson("rulesets/current.json");
-  }
-
-  function loadCopy() {
-    if (window.__NC_COPY__) return Promise.resolve(window.__NC_COPY__);
-    return loadJson("config/copy.de.json");
-  }
-
   function boot() {
     Promise.all([
-      loadRuleset(),
-      loadCopy(),
+      window.__NC_RULESET__
+        ? Promise.resolve(window.__NC_RULESET__)
+        : loadJson("rulesets/current.json"),
+      window.__NC_COPY__
+        ? Promise.resolve(window.__NC_COPY__)
+        : loadJson("config/copy.de.json"),
       NC.affiliates.load(loadJson),
       NC.skin.resolve(loadJson),
     ])
@@ -606,9 +619,7 @@
         state.ready = true;
         renderFooter();
         bindUi();
-        setStep(1);
-        var wrap = $("mod-jahr-wrap");
-        if (wrap) wrap.hidden = radioValue("modernisierung") !== "umfassend";
+        setPhase("role");
         renderResults();
       })
       .catch(function () {

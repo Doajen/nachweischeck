@@ -15,7 +15,7 @@
 html {
   color: var(--ink);
   background: var(--paper);
-  font-family: Georgia, "Times New Roman", Times, serif;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   line-height: 1.45;
   font-size: 17px;
 }
@@ -68,6 +68,108 @@ body {
   margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin: 0.75rem 0 1rem;
+}
+
+.choice-grid-2 {
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 520px) {
+  .choice-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .choice-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.25rem;
+  width: 100%;
+  text-align: left;
+  border: 2px solid var(--line);
+  background: #fff;
+  padding: 1rem 1.05rem;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+  border-radius: 2px;
+}
+
+.choice:hover,
+.choice:focus-visible {
+  border-color: var(--accent);
+}
+
+.choice-title {
+  font-size: 1.1rem;
+  font-weight: 650;
+}
+
+.choice-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.buy-split {
+  margin-top: 0.5rem;
+}
+
+.text-back {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.role-badge {
+  font-size: 0.9rem;
+  color: var(--muted);
+  margin: 0 0 0.5rem;
+}
+
+.chip-block {
+  margin: 0 0 0.9rem;
+}
+
+.chip-label {
+  font-size: 0.85rem;
+  font-weight: 650;
+  margin: 0 0 0.4rem;
+}
+
+.zahlen-details {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0 1rem;
+  background: #fff;
+}
+
+.zahlen-details summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.zahlen-body {
+  margin-top: 0.75rem;
+}
+
+.screen h1 {
+  font-size: 1.25rem;
 }
 
 .banner {

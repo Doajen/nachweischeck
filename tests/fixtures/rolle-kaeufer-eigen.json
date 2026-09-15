@@ -1,0 +1,13 @@
+{
+  "id": "rolle-kaeufer-eigen",
+  "facts": {
+    "rolle": "kaeufer_eigen",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "unbekannt"
+  },
+  "expect": {
+    "cards": { "afa": false, "rnd": false, "ausweis": true },
+    "rndCta": { "primary": false }
+  }
+}
