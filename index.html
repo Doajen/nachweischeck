@@ -17,69 +17,88 @@
 
   <div id="load-banner" class="banner" hidden role="status"></div>
 
-  <main id="main" class="spa">
-    <aside class="rail" aria-label="Eingaben">
-      <form id="gate-form" novalidate>
-        <section id="screen-role" class="screen">
-          <h1 id="gate-heading">Was trifft auf Sie zu?</h1>
-          <div class="choice-grid" id="role-grid">
-            <button type="button" class="choice" data-role="vermieter">
-              <span class="choice-title">Ich vermiete schon</span>
-              <span class="choice-sub">Bestand vermieten</span>
+  <main id="main" class="canvas">
+    <form id="gate-form" novalidate>
+      <section id="q1-role" class="quad" data-open="true" aria-label="Start">
+        <h1 id="gate-heading">Was trifft auf Sie zu?</h1>
+        <div class="choice-grid" id="role-grid">
+          <button type="button" class="choice" data-role="vermieter">
+            <span class="choice-title">Ich vermiete schon</span>
+            <span class="choice-sub">Bestand vermieten</span>
+          </button>
+          <button type="button" class="choice" data-role-group="kaufen">
+            <span class="choice-title">Ich kaufe</span>
+            <span class="choice-sub">Kauf geplant</span>
+          </button>
+          <button type="button" class="choice" data-role="verkaeufer">
+            <span class="choice-title">Ich verkaufe</span>
+            <span class="choice-sub">Verkauf / Übergabe</span>
+          </button>
+          <button type="button" class="choice" data-role="mieter">
+            <span class="choice-title">Ich bin Mieter</span>
+            <span class="choice-sub">Nur Ausweis-Orientierung</span>
+          </button>
+        </div>
+        <div id="buy-split" class="buy-split" hidden>
+          <p class="hint" id="buy-split-hint">Wozu kaufen Sie?</p>
+          <div class="choice-grid choice-grid-2">
+            <button type="button" class="choice" data-role="kaeufer_vermiet">
+              <span class="choice-title">Zum Vermieten</span>
             </button>
-            <button type="button" class="choice" data-role-group="kaufen">
-              <span class="choice-title">Ich kaufe</span>
-              <span class="choice-sub">Kauf geplant</span>
-            </button>
-            <button type="button" class="choice" data-role="verkaeufer">
-              <span class="choice-title">Ich verkaufe</span>
-              <span class="choice-sub">Verkauf / Übergabe</span>
-            </button>
-            <button type="button" class="choice" data-role="mieter">
-              <span class="choice-title">Ich bin Mieter</span>
-              <span class="choice-sub">Nur Ausweis-Orientierung</span>
+            <button type="button" class="choice" data-role="kaeufer_eigen">
+              <span class="choice-title">Zum Selbstwohnen</span>
             </button>
           </div>
-          <div id="buy-split" class="buy-split" hidden>
-            <p class="hint" id="buy-split-hint">Wozu kaufen Sie?</p>
-            <div class="choice-grid choice-grid-2">
-              <button type="button" class="choice" data-role="kaeufer_vermiet">
-                <span class="choice-title">Zum Vermieten</span>
-              </button>
-              <button type="button" class="choice" data-role="kaeufer_eigen">
-                <span class="choice-title">Zum Selbstwohnen</span>
-              </button>
-            </div>
-            <button type="button" class="text-back" id="buy-back">Zurück</button>
-          </div>
-          <input type="hidden" id="rolle" name="rolle" value="">
-          <input type="hidden" id="anlass" name="anlass" value="">
-          <input type="hidden" id="nutzung" name="nutzung" value="">
-        </section>
+          <button type="button" class="text-back" id="buy-back">Zurück</button>
+        </div>
+        <input type="hidden" id="rolle" name="rolle" value="">
+        <input type="hidden" id="anlass" name="anlass" value="">
+        <input type="hidden" id="nutzung" name="nutzung" value="">
+      </section>
 
-        <section id="screen-object" class="screen" hidden>
+      <section id="q2-context" class="quad" data-open="false" aria-label="Kontext">
+        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
+        <div class="quad-body" id="q2-body" hidden>
           <p class="role-badge" id="role-badge"></p>
-          <h1>Zum Objekt</h1>
-          <div class="field">
-            <label for="fertigstellungJahr">Fertigstellungsjahr</label>
-            <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
-          </div>
-          <div class="chip-block">
-            <p class="chip-label">Modernisierung</p>
-            <div class="chips">
-              <label class="chip"><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
-              <label class="chip"><input type="radio" name="modernisierung" value="keine"> Keine</label>
-              <label class="chip"><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
-              <label class="chip"><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
+          <div id="q2-object-fields">
+            <h2>Zum Objekt</h2>
+            <div class="field" id="year-field">
+              <label for="fertigstellungJahr">Fertigstellungsjahr
+                <button type="button" class="term-help" data-term="gesetzliche_groesse" aria-label="Hilfe gesetzliche Größe">?</button>
+              </label>
+              <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
+            </div>
+            <div class="chip-block" id="mod-block">
+              <p class="chip-label">Modernisierung</p>
+              <div class="chips">
+                <label class="chip"><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
+                <label class="chip"><input type="radio" name="modernisierung" value="keine"> Keine</label>
+                <label class="chip"><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
+                <label class="chip"><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
+              </div>
+            </div>
+            <div class="field" id="mod-jahr-wrap" hidden>
+              <label for="modernisierungJahr">Jahr der umfassenden Modernisierung</label>
+              <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
+            </div>
+            <div class="chip-block" id="vermieter-anlass-block" hidden>
+              <p class="chip-label">Vermietung</p>
+              <div class="chips">
+                <label class="chip"><input type="radio" name="vermieter_anlass" value="halten" checked> Bestand halten</label>
+                <label class="chip"><input type="radio" name="vermieter_anlass" value="neu_vermietung"> Neu vermieten</label>
+              </div>
             </div>
           </div>
-          <div class="field" id="mod-jahr-wrap" hidden>
-            <label for="modernisierungJahr">Jahr der umfassenden Modernisierung</label>
-            <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
+
+          <div id="q2-edu" hidden>
+            <h2>Orientierung</h2>
+            <p id="q2-edu-text"></p>
           </div>
 
           <div class="chip-block" id="ausweis-block">
-            <p class="chip-label">Energieausweis</p>
+            <p class="chip-label">Energieausweis
+              <button type="button" class="term-help" data-term="energieausweis" aria-label="Hilfe Energieausweis">?</button>
+            </p>
             <div class="chips">
               <label class="chip"><input type="radio" name="ausweis" value="vorhanden"> Vorhanden</label>
               <label class="chip"><input type="radio" name="ausweis" value="nicht_vorhanden"> Nicht vorhanden</label>
@@ -87,19 +106,13 @@
             </div>
           </div>
 
-          <div class="chip-block" id="vermieter-anlass-block" hidden>
-            <p class="chip-label">Vermietung</p>
-            <div class="chips">
-              <label class="chip"><input type="radio" name="vermieter_anlass" value="halten" checked> Bestand halten</label>
-              <label class="chip"><input type="radio" name="vermieter_anlass" value="neu_vermietung"> Neu vermieten</label>
-            </div>
-          </div>
-
-          <details id="zahlen-details" class="zahlen-details">
+          <details id="zahlen-details" class="zahlen-details" hidden>
             <summary id="zahlen-summary">Optionale Beträge</summary>
             <div class="zahlen-body">
               <div class="field">
-                <label for="gebaeudeanteilEur">Gebäudeanteil in €</label>
+                <label for="gebaeudeanteilEur">Gebäudeanteil in €
+                  <button type="button" class="term-help" data-term="gebaeudeanteil" aria-label="Hilfe Gebäudeanteil">?</button>
+                </label>
                 <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
               </div>
               <p class="hint">Oder Kaufpreis und eigener Split-%:</p>
@@ -114,7 +127,9 @@
                 </div>
               </div>
               <div class="field">
-                <label for="grenzsatzPct" id="annahme-grenz-legend">Annahme Grenzsatz %</label>
+                <label for="grenzsatzPct">Annahme Grenzsatz %
+                  <button type="button" class="term-help" data-term="grenzsatz" aria-label="Hilfe Grenzsatz">?</button>
+                </label>
                 <p class="hint" id="annahme-grenz-hint">Optional. Leer = keine Steuer-Cash-Spalte.</p>
                 <input type="number" id="grenzsatzPct" name="grenzsatzPct" inputmode="decimal" min="0" max="100" step="0.1">
                 <div class="presets">
@@ -124,7 +139,7 @@
                 </div>
               </div>
               <div class="field">
-                <label for="honorarEur" id="annahme-honorar-legend">Annahme Honorar €</label>
+                <label for="honorarEur">Annahme Honorar €</label>
                 <p class="hint" id="annahme-honorar-hint">Optional. Leer = keine Amortisationsangabe.</p>
                 <input type="number" id="honorarEur" name="honorarEur" inputmode="decimal" min="0" step="1">
                 <div class="presets">
@@ -146,12 +161,22 @@
           </details>
 
           <button type="button" class="text-back" id="role-back">Andere Rolle wählen</button>
-        </section>
-      </form>
-    </aside>
+        </div>
+      </section>
 
-    <section id="results" class="dashboard results" aria-live="polite" hidden></section>
+      <section id="q3-insight" class="quad" data-open="false" aria-label="Lagebild">
+        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
+        <div class="quad-body" id="q3-body" hidden></div>
+      </section>
+
+      <section id="q4-next" class="quad" data-open="false" aria-label="Nächster Schritt">
+        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
+        <div class="quad-body" id="q4-body" hidden></div>
+      </section>
+    </form>
   </main>
+
+  <div id="term-popover" class="term-popover" hidden role="dialog" aria-modal="false"></div>
 
   <footer class="site-footer" id="site-footer">
     <p id="footer-meta"></p>

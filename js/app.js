@@ -1,6 +1,5 @@
 /**
- * Role-guided SPA. No persist, no analytics.
- * Avoids jargon: Anlass, Nutzung, primary/widen/suppress, gesetzliche ND-Größe.
+ * Educational quadrants + glossary. Calc/route/affiliates unchanged.
  */
 (function () {
   "use strict";
@@ -11,16 +10,11 @@
     skin: {},
     ready: false,
     expanded: "rnd",
-    phase: "role", // role | buy | object
+    buyOpen: false,
   };
 
-  var ROLE_LABEL = {
-    vermieter: "Ich vermiete schon",
-    kaeufer_vermiet: "Ich kaufe zum Vermieten",
-    kaeufer_eigen: "Ich kaufe zum Selbstwohnen",
-    verkaeufer: "Ich verkaufe",
-    mieter: "Ich bin Mieter",
-  };
+  var AFAC_PATHS = { vermieter: true, kaeufer_vermiet: true };
+  var AUSWEIS_PATHS = { mieter: true, kaeufer_eigen: true, verkaeufer: true };
 
   function $(id) {
     return document.getElementById(id);
@@ -46,6 +40,10 @@
     return n;
   }
 
+  function yearKnown(facts) {
+    return Number.isFinite(facts.fertigstellungJahr);
+  }
+
   function syncHiddenFromRolle(rolle) {
     $("rolle").value = rolle || "";
     var mapped = NC.applyRolle({
@@ -61,9 +59,7 @@
 
   function readFacts() {
     var rolle = $("rolle").value || null;
-    if (rolle === "vermieter") {
-      syncHiddenFromRolle("vermieter");
-    }
+    if (rolle === "vermieter") syncHiddenFromRolle("vermieter");
     var facts = {
       rolle: rolle || undefined,
       anlass: $("anlass").value || undefined,
@@ -96,13 +92,11 @@
 
   function formatEuro(n) {
     if (!Number.isFinite(n)) return "—";
-    return (
-      new Intl.NumberFormat("de-DE", {
-        style: "currency",
-        currency: "EUR",
-        maximumFractionDigits: 0,
-      }).format(n) + " (Modellrechnung)"
-    );
+    return new Intl.NumberFormat("de-DE", {
+      style: "currency",
+      currency: "EUR",
+      maximumFractionDigits: 0,
+    }).format(n);
   }
 
   function formatNum(n, digits) {
@@ -124,12 +118,6 @@
     return "";
   }
 
-  function showBanner(msg) {
-    var b = $("load-banner");
-    b.hidden = false;
-    b.textContent = msg;
-  }
-
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -138,43 +126,94 @@
       .replace(/"/g, "&quot;");
   }
 
+  function showBanner(msg) {
+    $("load-banner").hidden = false;
+    $("load-banner").textContent = msg;
+  }
+
+  function setQuadOpen(id, open) {
+    var el = $(id);
+    if (!el) return;
+    el.setAttribute("data-open", open ? "true" : "false");
+  }
+
+  function termBtn(term, label) {
+    return (
+      '<button type="button" class="term-help" data-term="' +
+      escapeHtml(term) +
+      '" aria-label="Hilfe ' +
+      escapeHtml(label || term) +
+      '">?</button>'
+    );
+  }
+
   function updateModJahrVisibility() {
     var wrap = $("mod-jahr-wrap");
-    if (!wrap) return;
-    wrap.hidden = radioValue("modernisierung") !== "umfassend";
+    if (wrap) wrap.hidden = radioValue("modernisierung") !== "umfassend";
   }
 
-  function setPhase(phase) {
-    state.phase = phase;
-    $("screen-role").hidden = phase === "object";
-    $("buy-split").hidden = phase !== "buy";
-    $("role-grid").hidden = phase === "buy" || phase === "object";
-    $("screen-object").hidden = phase !== "object";
-    if (phase === "object") {
-      var rolle = $("rolle").value;
-      $("role-badge").textContent =
-        t("role.badgePrefix") + " " + (t("role." + rolle) || ROLE_LABEL[rolle] || "");
-      $("vermieter-anlass-block").hidden = rolle !== "vermieter";
-      updateModJahrVisibility();
+  function unlock(facts) {
+    var rolle = facts.rolle;
+    var placeholders = document.querySelectorAll("[data-placeholder]");
+    for (var i = 0; i < placeholders.length; i++) {
+      placeholders[i].textContent = t("quad.placeholder");
     }
-  }
 
-  function selectRole(rolle) {
-    syncHiddenFromRolle(rolle);
-    setPhase("object");
-    renderResults();
-  }
+    setQuadOpen("q1-role", true);
 
-  function shouldShowDashboard(facts) {
-    if (!facts.rolle) return false;
-    if (
-      facts.rolle === "mieter" ||
-      facts.rolle === "verkaeufer" ||
-      facts.rolle === "kaeufer_eigen"
-    ) {
-      return true;
+    if (!rolle) {
+      setQuadOpen("q2-context", false);
+      setQuadOpen("q3-insight", false);
+      setQuadOpen("q4-next", false);
+      $("q2-body").hidden = true;
+      $("q3-body").hidden = true;
+      $("q4-body").hidden = true;
+      $("buy-split").hidden = !state.buyOpen;
+      $("role-grid").hidden = state.buyOpen;
+      return { path: null, showInsight: false };
     }
-    return Number.isFinite(facts.fertigstellungJahr);
+
+    $("buy-split").hidden = true;
+    $("role-grid").hidden = false;
+    setQuadOpen("q2-context", true);
+    $("q2-body").hidden = false;
+
+    var afaPath = !!AFAC_PATHS[rolle];
+    var ausweisPath = !!AUSWEIS_PATHS[rolle];
+
+    $("q2-object-fields").hidden = !afaPath;
+    $("q2-edu").hidden = !ausweisPath;
+    $("year-field").hidden = !afaPath;
+    $("mod-block").hidden = !afaPath;
+    $("vermieter-anlass-block").hidden = rolle !== "vermieter";
+    $("zahlen-details").hidden = !afaPath;
+    $("ausweis-block").hidden = false;
+
+    if (ausweisPath) {
+      $("q2-edu-text").textContent =
+        rolle === "mieter"
+          ? t("mieter.ausweisOnly") + " " + t("mieter.forward")
+          : t("edu.ausweisPath");
+    }
+
+    $("role-badge").textContent =
+      t("role.badgePrefix") + " " + (t("role." + rolle) || rolle);
+
+    updateModJahrVisibility();
+
+    var showInsight = false;
+    if (ausweisPath) {
+      showInsight = true;
+    } else if (afaPath && yearKnown(facts)) {
+      showInsight = true;
+    }
+
+    setQuadOpen("q3-insight", showInsight);
+    setQuadOpen("q4-next", showInsight);
+    $("q3-body").hidden = !showInsight;
+    $("q4-body").hidden = !showInsight;
+
+    return { path: afaPath ? "afa" : "ausweis", showInsight: showInsight };
   }
 
   function renderCta(lever, slot, labelKey, variant) {
@@ -206,6 +245,50 @@
     );
   }
 
+  function renderLagebild(routed) {
+    if (!routed.afa || routed.afa.blocked) return "";
+    var beat1 = t("lagebild.beat1")
+      .split("{satzPct}")
+      .join(String(routed.afa.satzPct).replace(".", ","))
+      .split("{ndJahre}")
+      .join(String(routed.afa.gesetzlicheNdJahre));
+    var beat4Key = "lagebild.beat4.pruefen";
+    if (routed.rndPosture === "widen") beat4Key = "lagebild.beat4.unsicher";
+    if (routed.rndPosture === "suppress") beat4Key = "lagebild.beat4.unwirtschaftlich";
+    return (
+      '<section class="lagebild" id="lagebild">' +
+      "<h2>" +
+      escapeHtml(t("lagebild.title")) +
+      " " +
+      termBtn("afa", "AfA") +
+      " " +
+      termBtn("rnd", "RND") +
+      "</h2>" +
+      '<p class="modell-caption">' +
+      escapeHtml(t("modell.caption")) +
+      "</p>" +
+      "<p>" +
+      escapeHtml(beat1) +
+      " " +
+      termBtn("gesetzliche_groesse", "gesetzliche Größe") +
+      "</p>" +
+      "<p>" +
+      escapeHtml(t("lagebild.beat2")) +
+      " " +
+      termBtn("nachweis", "Nachweis") +
+      "</p>" +
+      "<p>" +
+      escapeHtml(t("lagebild.beat3")) +
+      " " +
+      termBtn("szenario_nd", "Szenario ND") +
+      "</p>" +
+      "<p>" +
+      escapeHtml(t(beat4Key)) +
+      "</p>" +
+      "</section>"
+    );
+  }
+
   function scenarioById(routed, id) {
     if (!routed.scenarios) return null;
     for (var i = 0; i < routed.scenarios.length; i++) {
@@ -214,18 +297,309 @@
     return null;
   }
 
-  function cashLine(sc) {
-    if (!sc || !sc.mehrAfa || sc.mehrAfa.ratesOnly) return "";
-    var parts = [t("label.mehrAfa") + ": " + formatEuro(sc.mehrAfa.mehrAfaEur)];
-    if (sc.steuerCash && !sc.steuerCash.ratesOnly) {
-      parts.push(t("label.steuerCash") + ": " + formatEuro(sc.steuerCash.eurJahr));
+  function tileShell(id, title, collapsed, body, expanded) {
+    return (
+      '<article class="tile" data-tile="' +
+      escapeHtml(id) +
+      '" data-expanded="' +
+      (expanded ? "true" : "false") +
+      '">' +
+      '<button type="button" class="tile-summary" data-expand="' +
+      escapeHtml(id) +
+      '"><h2>' +
+      escapeHtml(title) +
+      "</h2><p class=\"tile-collapsed-line\">" +
+      collapsed +
+      "</p></button>" +
+      '<div class="tile-body">' +
+      body +
+      "</div></article>"
+    );
+  }
+
+  function renderRndBody(routed) {
+    var html =
+      '<p class="note note-strong">' +
+      escapeHtml(postureLabel(routed.rndPosture)) +
+      "</p>";
+    if (routed.rndPosture === "suppress") {
+      html += "<p class=\"note\">" + escapeHtml(t("rnd.unwirtschaftlich")) + "</p>";
+    } else if (routed.rndPosture === "widen") {
+      html += "<p class=\"note\">" + escapeHtml(t("rnd.widenNote")) + "</p>";
     }
-    if (sc.amort && !sc.amort.ratesOnly) {
-      parts.push(
-        t("label.amort") + ": " + formatNum(sc.amort.jahre, 1) + " (Modellrechnung)"
+
+    var showTax = routed.grenzsatzPct != null;
+    var showAmort = routed.honorarEur != null && showTax;
+    if (routed.scenarios && routed.scenarios.length) {
+      html +=
+        '<table class="scenarios"><thead><tr><th>Szenario</th><th>Satz</th>';
+      if (routed.gebaeudeanteilEur != null) html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
+      if (showTax) html += "<th>" + escapeHtml(t("label.steuerCash")) + "</th>";
+      if (showAmort) html += "<th>" + escapeHtml(t("label.amort")) + "</th>";
+      html += "</tr></thead><tbody>";
+      for (var i = 0; i < routed.scenarios.length; i++) {
+        var sc = routed.scenarios[i];
+        var szenSatz = sc.ndJahre ? 100 / sc.ndJahre : null;
+        html +=
+          "<tr><td>" +
+          escapeHtml(sc.label) +
+          "</td><td>" +
+          escapeHtml(formatPct(Math.round(szenSatz * 1000) / 1000)) +
+          "</td>";
+        if (routed.gebaeudeanteilEur != null) {
+          html +=
+            sc.mehrAfa && !sc.mehrAfa.ratesOnly
+              ? '<td class="euro">' + escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) + "</td>"
+              : "<td>—</td>";
+        }
+        if (showTax) {
+          html +=
+            sc.steuerCash && !sc.steuerCash.ratesOnly
+              ? '<td class="euro">' + escapeHtml(formatEuro(sc.steuerCash.eurJahr)) + "</td>"
+              : "<td>—</td>";
+        }
+        if (showAmort) {
+          html +=
+            sc.amort && !sc.amort.ratesOnly
+              ? "<td>" + escapeHtml(formatNum(sc.amort.jahre, 1)) + "</td>"
+              : "<td>—</td>";
+        }
+        html += "</tr>";
+      }
+      html += "</tbody></table>";
+      html +=
+        '<p class="modell-caption">' + escapeHtml(t("modell.caption")) + "</p>";
+    }
+
+    html +=
+      '<details class="rechtslage-box"><summary>Hintergrund</summary><p>' +
+      escapeHtml(t("rnd.rechtslage")) +
+      "</p></details>";
+
+    if (routed.rndCta && routed.rndCta.primary) {
+      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    } else if (routed.rndCta && routed.rndCta.secondaryText) {
+      html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
+    }
+    return html;
+  }
+
+  function renderAfaBody(routed) {
+    if (routed.afa && routed.afa.blocked) {
+      return "<p>" + escapeHtml(t("afa.needYear")) + "</p>";
+    }
+    return (
+      "<p>" +
+      escapeHtml(t("afa.satzLabel")) +
+      ": <strong>" +
+      escapeHtml(formatPct(routed.afa.satzPct)) +
+      "</strong> " +
+      escapeHtml(t("afa.perYear")) +
+      ".</p><p class=\"note\">" +
+      escapeHtml(t("deg5a.outOfScope")) +
+      "</p>"
+    );
+  }
+
+  function renderKpaBody(routed) {
+    var html =
+      "<p>" +
+      escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
+      " " +
+      termBtn("arbeitshilfe", "Arbeitshilfe") +
+      "</p>";
+    if (routed.kpaCompare) {
+      html +=
+        "<ul><li>A: " +
+        escapeHtml(formatPct(routed.kpaCompare.a.splitPct)) +
+        " → " +
+        escapeHtml(formatEuro(routed.kpaCompare.a.gebaeudeanteilEur)) +
+        "</li><li>B: " +
+        escapeHtml(formatPct(routed.kpaCompare.b.splitPct)) +
+        " → " +
+        escapeHtml(formatEuro(routed.kpaCompare.b.gebaeudeanteilEur)) +
+        "</li></ul>";
+    }
+    if (routed.handoff && routed.handoff.kpa) {
+      html += renderCta("kpa", "primary", "cta.kpa", "button");
+    }
+    return html;
+  }
+
+  function renderAusweisBody(routed) {
+    var key = "geg.keinAnlass";
+    if (routed.rolle === "mieter") key = "mieter.ausweisOnly";
+    else if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
+    else if (routed.geg === "ausnahme_pruefen") key = "geg.ausnahme";
+    else if (routed.geg === "vorhanden") key = "geg.vorhanden";
+    var html = "<p>" + escapeHtml(t(key)) + "</p>";
+    if (routed.rolle === "mieter") {
+      html += "<p class=\"note\">" + escapeHtml(t("mieter.forward")) + "</p>";
+    }
+    if (routed.handoff && routed.handoff.ausweis) {
+      html += renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+    return html;
+  }
+
+  function strongestCta(routed) {
+    if (routed.rndCta && routed.rndCta.primary) {
+      return renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    }
+    if (routed.handoff && routed.handoff.kpa) {
+      return renderCta("kpa", "primary", "cta.kpa", "button");
+    }
+    if (routed.handoff && routed.handoff.ausweis) {
+      return renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+    if (routed.rndCta && routed.rndCta.secondaryText) {
+      return renderCta("rnd", "secondary", "cta.rndSecondary", "text");
+    }
+    return "";
+  }
+
+  function defaultExpanded(routed) {
+    if (routed.cards.rnd) return "rnd";
+    if (routed.cards.ausweis) return "ausweis";
+    if (routed.cards.afa) return "afa";
+    if (routed.cards.kpa) return "kpa";
+    return "ausweis";
+  }
+
+  function assertNoForbidden(text) {
+    var forbidden = [
+      "Ihre Restnutzungsdauer",
+      "landet bei",
+      "typischerweise 20–30",
+      "Anerkennungsquote",
+      "Steuerspar-Garantie",
+      "gute Erfolgsaussicht",
+    ];
+    for (var i = 0; i < forbidden.length; i++) {
+      if (text.indexOf(forbidden[i]) !== -1) {
+        console.error("Forbidden string:", forbidden[i]);
+      }
+    }
+  }
+
+  function renderAll() {
+    if (!state.ready) return;
+    var facts = readFacts();
+    var unlockState = unlock(facts);
+
+    if (!facts.rolle || !unlockState.showInsight) {
+      $("q3-body").innerHTML = "";
+      $("q4-body").innerHTML = "";
+      return;
+    }
+
+    var routed = NC.route(facts, state.ruleset);
+    if (!state.expanded || !routed.cards[state.expanded]) {
+      state.expanded = defaultExpanded(routed);
+    }
+
+    var html = "";
+    if (unlockState.path === "afa") {
+      html += renderLagebild(routed);
+    }
+
+    html += '<div class="tiles">';
+    if (routed.cards.afa) {
+      html += tileShell(
+        "afa",
+        t("tile.afa"),
+        routed.afa && !routed.afa.blocked
+          ? escapeHtml(formatPct(routed.afa.satzPct))
+          : "—",
+        renderAfaBody(routed),
+        state.expanded === "afa"
       );
     }
-    return parts.join(" · ");
+    if (routed.cards.rnd) {
+      var nd30 = scenarioById(routed, "nd30");
+      var cash = "";
+      if (nd30 && nd30.mehrAfa && !nd30.mehrAfa.ratesOnly) {
+        cash = " · " + escapeHtml(formatEuro(nd30.mehrAfa.mehrAfaEur));
+      }
+      html += tileShell(
+        "rnd",
+        t("tile.rnd"),
+        escapeHtml(postureLabel(routed.rndPosture)) + cash,
+        renderRndBody(routed),
+        state.expanded === "rnd"
+      );
+    }
+    if (routed.cards.kpa) {
+      html += tileShell(
+        "kpa",
+        t("tile.kpa"),
+        escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 64) + "…",
+        renderKpaBody(routed),
+        state.expanded === "kpa"
+      );
+    }
+    if (routed.cards.ausweis) {
+      var aKey = routed.rolle === "mieter" ? "mieter.ausweisOnly" : "geg.pflicht";
+      if (routed.rolle !== "mieter") {
+        if (routed.geg === "vorhanden") aKey = "geg.vorhanden";
+        else if (routed.geg === "kein_anlass") aKey = "geg.keinAnlass";
+        else if (routed.geg === "ausnahme_pruefen") aKey = "geg.ausnahme";
+      }
+      html += tileShell(
+        "ausweis",
+        t("tile.ausweis"),
+        escapeHtml(t(aKey)).slice(0, 64) + "…",
+        renderAusweisBody(routed),
+        state.expanded === "ausweis"
+      );
+    }
+    html += "</div>";
+
+    $("q3-body").innerHTML = html;
+    $("q4-body").innerHTML =
+      "<h2>" +
+      escapeHtml(t("q4.title")) +
+      "</h2>" +
+      strongestCta(routed);
+
+    assertNoForbidden(($("q3-body").innerText || "") + ($("q4-body").innerText || ""));
+  }
+
+  function hidePopover() {
+    var pop = $("term-popover");
+    pop.hidden = true;
+    pop.textContent = "";
+  }
+
+  function showPopover(btn) {
+    var term = btn.getAttribute("data-term");
+    var key = "glossary." + term;
+    var pop = $("term-popover");
+    pop.textContent = t(key);
+    pop.hidden = false;
+    var rect = btn.getBoundingClientRect();
+    var top = rect.bottom + window.scrollY + 6;
+    var left = rect.left + window.scrollX;
+    pop.style.top = top + "px";
+    pop.style.left = Math.min(left, window.scrollX + window.innerWidth - 300) + "px";
+  }
+
+  function resetRole() {
+    $("rolle").value = "";
+    $("anlass").value = "";
+    $("nutzung").value = "";
+    $("fertigstellungJahr").value = "";
+    $("modernisierungJahr").value = "";
+    state.buyOpen = false;
+    state.expanded = "rnd";
+    hidePopover();
+    renderAll();
+  }
+
+  function selectRole(rolle) {
+    syncHiddenFromRolle(rolle);
+    state.buyOpen = false;
+    renderAll();
   }
 
   function renderFooter() {
@@ -270,283 +644,30 @@
     }
     var hPreset = document.querySelector("[data-set-honorar]");
     if (hPreset) hPreset.textContent = t("annahme.presetHonorar");
+    var ph = document.querySelectorAll("[data-placeholder]");
+    for (var j = 0; j < ph.length; j++) ph[j].textContent = t("quad.placeholder");
     NC.skin.apply(state.skin, t);
-  }
-
-  function tileShell(id, title, collapsedHtml, bodyHtml, expanded) {
-    return (
-      '<article class="tile" data-tile="' +
-      escapeHtml(id) +
-      '" data-expanded="' +
-      (expanded ? "true" : "false") +
-      '">' +
-      '<button type="button" class="tile-summary" data-expand="' +
-      escapeHtml(id) +
-      '">' +
-      "<h2>" +
-      escapeHtml(title) +
-      "</h2>" +
-      '<p class="tile-collapsed-line">' +
-      collapsedHtml +
-      "</p>" +
-      "</button>" +
-      '<div class="tile-body">' +
-      bodyHtml +
-      "</div>" +
-      "</article>"
-    );
-  }
-
-  function renderAfaBody(routed) {
-    var html = '<p class="modell">Modellrechnung</p>';
-    if (routed.afa && routed.afa.blocked) {
-      html += "<p>" + escapeHtml(t("afa.needYear")) + "</p>";
-    } else if (routed.afa) {
-      html +=
-        "<p>" +
-        escapeHtml(t("afa.satzLabel")) +
-        ": <strong>" +
-        escapeHtml(formatPct(routed.afa.satzPct)) +
-        "</strong> " +
-        escapeHtml(t("afa.perYear")) +
-        ".</p>";
-      html += '<p class="note">' + escapeHtml(t("deg5a.outOfScope")) + "</p>";
-    }
-    return html;
-  }
-
-  function renderRndBody(routed) {
-    var html = '<p class="modell">Modellrechnung</p>';
-    html +=
-      '<p class="note note-strong">' +
-      escapeHtml(postureLabel(routed.rndPosture)) +
-      "</p>";
-    if (routed.rndPosture === "suppress") {
-      html += '<p class="note">' + escapeHtml(t("rnd.unwirtschaftlich")) + "</p>";
-    } else if (routed.rndPosture === "widen") {
-      html += '<p class="note">' + escapeHtml(t("rnd.widenNote")) + "</p>";
-    }
-
-    var showTax = routed.grenzsatzPct != null;
-    var showAmort = routed.honorarEur != null && showTax;
-
-    if (routed.scenarios && routed.scenarios.length) {
-      html +=
-        '<table class="scenarios"><thead><tr><th>Szenario</th><th>Satz</th>';
-      if (routed.gebaeudeanteilEur != null) {
-        html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
-      }
-      if (showTax) html += "<th>" + escapeHtml(t("label.steuerCash")) + "</th>";
-      if (showAmort) html += "<th>" + escapeHtml(t("label.amort")) + "</th>";
-      html += "</tr></thead><tbody>";
-      for (var i = 0; i < routed.scenarios.length; i++) {
-        var sc = routed.scenarios[i];
-        var szenSatz = sc.ndJahre ? 100 / sc.ndJahre : null;
-        html +=
-          "<tr><td>" +
-          escapeHtml(sc.label) +
-          "</td><td>" +
-          escapeHtml(formatPct(Math.round(szenSatz * 1000) / 1000)) +
-          "</td>";
-        if (routed.gebaeudeanteilEur != null) {
-          html +=
-            sc.mehrAfa && !sc.mehrAfa.ratesOnly
-              ? '<td class="euro">' +
-                escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) +
-                "</td>"
-              : "<td>—</td>";
-        }
-        if (showTax) {
-          html +=
-            sc.steuerCash && !sc.steuerCash.ratesOnly
-              ? '<td class="euro">' +
-                escapeHtml(formatEuro(sc.steuerCash.eurJahr)) +
-                "</td>"
-              : "<td>—</td>";
-        }
-        if (showAmort) {
-          html +=
-            sc.amort && !sc.amort.ratesOnly
-              ? "<td>" +
-                escapeHtml(formatNum(sc.amort.jahre, 1)) +
-                " (Modellrechnung)</td>"
-              : "<td>—</td>";
-        }
-        html += "</tr>";
-      }
-      html += "</tbody></table>";
-    }
-
-    html +=
-      '<details class="rechtslage-box"><summary>Hintergrund</summary><p>' +
-      escapeHtml(t("rnd.rechtslage")) +
-      "</p></details>";
-
-    if (routed.rndCta && routed.rndCta.primary) {
-      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
-    } else if (routed.rndCta && routed.rndCta.secondaryText) {
-      html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
-    }
-    return html;
-  }
-
-  function renderKpaBody(routed) {
-    var html =
-      '<p class="modell">Modellrechnung</p><p>' +
-      escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
-      "</p>";
-    if (routed.kpaCompare) {
-      html +=
-        "<ul><li>A: " +
-        escapeHtml(formatPct(routed.kpaCompare.a.splitPct)) +
-        " → " +
-        escapeHtml(formatEuro(routed.kpaCompare.a.gebaeudeanteilEur)) +
-        "</li><li>B: " +
-        escapeHtml(formatPct(routed.kpaCompare.b.splitPct)) +
-        " → " +
-        escapeHtml(formatEuro(routed.kpaCompare.b.gebaeudeanteilEur)) +
-        "</li></ul>";
-    }
-    if (routed.handoff && routed.handoff.kpa) {
-      html += renderCta("kpa", "primary", "cta.kpa", "button");
-    }
-    return html;
-  }
-
-  function renderAusweisBody(routed) {
-    var key = "geg.keinAnlass";
-    if (routed.rolle === "mieter") key = "mieter.ausweisOnly";
-    else if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
-    else if (routed.geg === "ausnahme_pruefen") key = "geg.ausnahme";
-    else if (routed.geg === "vorhanden") key = "geg.vorhanden";
-    var html = "<p>" + escapeHtml(t(key)) + "</p>";
-    if (routed.rolle === "mieter") {
-      html += '<p class="note">' + escapeHtml(t("mieter.forward")) + "</p>";
-    }
-    if (routed.handoff && routed.handoff.ausweis) {
-      html += renderCta("ausweis", "primary", "cta.ausweis", "button");
-    }
-    return html;
-  }
-
-  function defaultExpanded(routed) {
-    if (routed.cards.rnd) return "rnd";
-    if (routed.cards.ausweis) return "ausweis";
-    if (routed.cards.afa) return "afa";
-    if (routed.cards.kpa) return "kpa";
-    return "ausweis";
-  }
-
-  function renderResults() {
-    if (!state.ready) return;
-    var facts = readFacts();
-    var box = $("results");
-
-    if (!shouldShowDashboard(facts)) {
-      box.hidden = true;
-      box.innerHTML = "";
-      return;
-    }
-
-    var routed = NC.route(facts, state.ruleset);
-    if (!state.expanded || !routed.cards[state.expanded]) {
-      state.expanded = defaultExpanded(routed);
-    }
-
-    var html = "";
-    if (routed.cards.afa) {
-      var afaCollapsed =
-        routed.afa && !routed.afa.blocked
-          ? escapeHtml(formatPct(routed.afa.satzPct)) + " " + escapeHtml(t("afa.perYear"))
-          : "—";
-      html += tileShell(
-        "afa",
-        t("tile.afa"),
-        afaCollapsed,
-        renderAfaBody(routed),
-        state.expanded === "afa"
-      );
-    }
-    if (routed.cards.rnd) {
-      var nd30 = scenarioById(routed, "nd30");
-      var collapsed =
-        escapeHtml(postureLabel(routed.rndPosture)) +
-        (cashLine(nd30) ? " · " + escapeHtml(cashLine(nd30)) : "");
-      html += tileShell(
-        "rnd",
-        t("tile.rnd"),
-        collapsed,
-        renderRndBody(routed),
-        state.expanded === "rnd"
-      );
-    }
-    if (routed.cards.kpa) {
-      html += tileShell(
-        "kpa",
-        t("tile.kpa"),
-        escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 72) + "…",
-        renderKpaBody(routed),
-        state.expanded === "kpa"
-      );
-    }
-    if (routed.cards.ausweis) {
-      var aKey =
-        routed.rolle === "mieter" ? "mieter.ausweisOnly" : "geg.pflicht";
-      if (routed.rolle !== "mieter") {
-        if (routed.geg === "ausnahme_pruefen") aKey = "geg.ausnahme";
-        else if (routed.geg === "vorhanden") aKey = "geg.vorhanden";
-        else if (routed.geg === "kein_anlass") aKey = "geg.keinAnlass";
-      }
-      html += tileShell(
-        "ausweis",
-        t("tile.ausweis"),
-        escapeHtml(t(aKey)).slice(0, 72) + "…",
-        renderAusweisBody(routed),
-        state.expanded === "ausweis"
-      );
-    }
-
-    if (!html) {
-      html = '<p class="note">' + escapeHtml(t("dashboard.empty")) + "</p>";
-    }
-
-    box.innerHTML = html;
-    box.hidden = false;
-
-    var forbidden = [
-      "Ihre Restnutzungsdauer",
-      "Anerkennungsquote",
-      "Steuerspar-Garantie",
-      "gesetzliche ND-Größe",
-      "primary",
-      "widen",
-      "suppress",
-    ];
-    var text = box.innerText || "";
-    for (var i = 0; i < forbidden.length; i++) {
-      if (text.indexOf(forbidden[i]) !== -1) {
-        console.error("Forbidden string in results:", forbidden[i]);
-      }
-    }
   }
 
   function bindUi() {
     var form = $("gate-form");
     form.addEventListener("input", function () {
       updateModJahrVisibility();
-      renderResults();
+      renderAll();
     });
     form.addEventListener("change", function () {
       updateModJahrVisibility();
       if ($("rolle").value === "vermieter") syncHiddenFromRolle("vermieter");
-      renderResults();
+      renderAll();
     });
 
     $("role-grid").addEventListener("click", function (e) {
       var btn = e.target.closest(".choice");
       if (!btn) return;
       if (btn.getAttribute("data-role-group") === "kaufen") {
-        setPhase("buy");
+        state.buyOpen = true;
+        $("buy-split").hidden = false;
+        $("role-grid").hidden = true;
         return;
       }
       var rolle = btn.getAttribute("data-role");
@@ -558,59 +679,73 @@
       if (btn) selectRole(btn.getAttribute("data-role"));
     });
     $("buy-back").addEventListener("click", function () {
-      setPhase("role");
-      $("rolle").value = "";
-      renderResults();
+      state.buyOpen = false;
+      $("buy-split").hidden = true;
+      $("role-grid").hidden = false;
     });
-    $("role-back").addEventListener("click", function () {
-      $("rolle").value = "";
-      $("anlass").value = "";
-      $("nutzung").value = "";
-      setPhase("role");
-      renderResults();
-    });
+    $("role-back").addEventListener("click", resetRole);
 
-    $("results").addEventListener("click", function (e) {
-      var btn = e.target.closest("[data-expand]");
-      if (!btn) return;
-      state.expanded = btn.getAttribute("data-expand");
-      renderResults();
-    });
-
-    form.addEventListener("click", function (e) {
+    document.addEventListener("click", function (e) {
+      var help = e.target.closest(".term-help");
+      if (help) {
+        e.preventDefault();
+        e.stopPropagation();
+        showPopover(help);
+        return;
+      }
+      if (!$("term-popover").hidden && !e.target.closest("#term-popover")) {
+        hidePopover();
+      }
+      var expand = e.target.closest("[data-expand]");
+      if (expand) {
+        state.expanded = expand.getAttribute("data-expand");
+        renderAll();
+      }
       var g = e.target.closest("[data-set-grenz]");
       if (g) {
         $("grenzsatzPct").value = g.getAttribute("data-set-grenz");
-        renderResults();
-        return;
+        renderAll();
       }
       var h = e.target.closest("[data-set-honorar]");
       if (h) {
         $("honorarEur").value = h.getAttribute("data-set-honorar");
-        renderResults();
+        renderAll();
       }
     });
 
-    updateModJahrVisibility();
-  }
-
-  function loadJson(path) {
-    return fetch(path, { cache: "no-store" }).then(function (res) {
-      if (!res.ok) throw new Error("HTTP " + res.status + " for " + path);
-      return res.json();
+    document.addEventListener("keydown", function (e) {
+      if (e.key === "Escape") hidePopover();
     });
+
+    updateModJahrVisibility();
   }
 
   function boot() {
     Promise.all([
       window.__NC_RULESET__
         ? Promise.resolve(window.__NC_RULESET__)
-        : loadJson("rulesets/current.json"),
+        : fetch("rulesets/current.json").then(function (r) {
+            if (!r.ok) throw new Error("ruleset");
+            return r.json();
+          }),
       window.__NC_COPY__
         ? Promise.resolve(window.__NC_COPY__)
-        : loadJson("config/copy.de.json"),
-      NC.affiliates.load(loadJson),
-      NC.skin.resolve(loadJson),
+        : fetch("config/copy.de.json").then(function (r) {
+            if (!r.ok) throw new Error("copy");
+            return r.json();
+          }),
+      NC.affiliates.load(function (path) {
+        return fetch(path).then(function (r) {
+          if (!r.ok) throw new Error(path);
+          return r.json();
+        });
+      }),
+      NC.skin.resolve(function (path) {
+        return fetch(path).then(function (r) {
+          if (!r.ok) throw new Error(path);
+          return r.json();
+        });
+      }),
     ])
       .then(function (pair) {
         state.ruleset = pair[0];
@@ -619,15 +754,13 @@
         state.ready = true;
         renderFooter();
         bindUi();
-        setPhase("role");
-        renderResults();
+        renderAll();
       })
       .catch(function () {
         showBanner(
           "Ruleset/Copy/Affiliates konnte nicht geladen werden (z. B. file://). Bitte über http://localhost öffnen oder die gepackte HTML-Datei nutzen. Es werden keine AfA-Sätze erfunden."
         );
         state.ready = false;
-        $("results").hidden = true;
         $("footer-meta").textContent = "Nachweischeck · Ruleset nicht geladen";
       });
   }

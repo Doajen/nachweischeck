@@ -1,10 +1,10 @@
 :root {
-  --ink: #1a1a1a;
-  --paper: #f7f4ef;
-  --muted: #555;
-  --line: #c8c2b8;
-  --accent: #243447;
-  --warn-bg: #f3e8d8;
+  --ink: #1c1b19;
+  --paper: #f6f3ee;
+  --muted: #5a574f;
+  --line: #d4cfc6;
+  --accent: #2c3a4a;
+  --warn-bg: #efe8dc;
   --tile: #fff;
 }
 
@@ -22,7 +22,7 @@ html {
 
 body {
   margin: 0 auto;
-  max-width: 68rem;
+  max-width: 72rem;
   padding: 1rem 1rem 2.5rem;
 }
 
@@ -57,8 +57,7 @@ body {
 }
 
 .brand {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 1.55rem;
+  font-size: 1.5rem;
   font-weight: 700;
   margin: 0 0 0.25rem;
   color: var(--accent);
@@ -68,108 +67,6 @@ body {
   margin: 0;
   color: var(--muted);
   font-size: 0.92rem;
-}
-
-.choice-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.65rem;
-  margin: 0.75rem 0 1rem;
-}
-
-.choice-grid-2 {
-  grid-template-columns: 1fr;
-}
-
-@media (min-width: 520px) {
-  .choice-grid {
-    grid-template-columns: 1fr 1fr;
-  }
-  .choice-grid-2 {
-    grid-template-columns: 1fr 1fr;
-  }
-}
-
-.choice {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.25rem;
-  width: 100%;
-  text-align: left;
-  border: 2px solid var(--line);
-  background: #fff;
-  padding: 1rem 1.05rem;
-  cursor: pointer;
-  font: inherit;
-  color: var(--ink);
-  border-radius: 2px;
-}
-
-.choice:hover,
-.choice:focus-visible {
-  border-color: var(--accent);
-}
-
-.choice-title {
-  font-size: 1.1rem;
-  font-weight: 650;
-}
-
-.choice-sub {
-  color: var(--muted);
-  font-size: 0.9rem;
-}
-
-.buy-split {
-  margin-top: 0.5rem;
-}
-
-.text-back {
-  border: 0;
-  background: transparent;
-  color: var(--accent);
-  font: inherit;
-  font-size: 0.9rem;
-  padding: 0.35rem 0;
-  cursor: pointer;
-  text-decoration: underline;
-}
-
-.role-badge {
-  font-size: 0.9rem;
-  color: var(--muted);
-  margin: 0 0 0.5rem;
-}
-
-.chip-block {
-  margin: 0 0 0.9rem;
-}
-
-.chip-label {
-  font-size: 0.85rem;
-  font-weight: 650;
-  margin: 0 0 0.4rem;
-}
-
-.zahlen-details {
-  border: 1px solid var(--line);
-  padding: 0.5rem 0.75rem;
-  margin: 0.75rem 0 1rem;
-  background: #fff;
-}
-
-.zahlen-details summary {
-  cursor: pointer;
-  font-weight: 650;
-}
-
-.zahlen-body {
-  margin-top: 0.75rem;
-}
-
-.screen h1 {
-  font-size: 1.25rem;
 }
 
 .banner {
@@ -186,64 +83,146 @@ body {
   margin-bottom: 0.5rem;
 }
 
-.spa {
-  display: block;
-}
-
-.rail {
-  margin-bottom: 1.25rem;
-}
-
-.step-nav {
+.canvas {
   display: flex;
-  flex-wrap: wrap;
-  gap: 0.35rem;
-  margin-bottom: 0.85rem;
+  flex-direction: column;
+  gap: 0.85rem;
 }
 
-.step-tab {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 0.85rem;
+.quad {
   border: 1px solid var(--line);
   background: #fff;
-  color: var(--ink);
-  padding: 0.35rem 0.65rem;
-  cursor: pointer;
+  padding: 1rem 1.1rem;
+  min-height: 6rem;
 }
 
-.step-tab[aria-current="step"] {
-  border-color: var(--accent);
-  color: var(--accent);
-  font-weight: 650;
+.quad[data-open="false"] {
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(8px);
+  pointer-events: none;
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
 }
 
-h1, h2, h3 {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+.quad[data-open="true"] {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  transition: opacity 200ms ease, transform 200ms ease;
+  position: relative;
+  width: auto;
+  height: auto;
+  overflow: visible;
+  clip: auto;
+}
+
+.quad[data-open="true"][data-locked-placeholder="true"] {
+  background: transparent;
+  border-style: dashed;
+  opacity: 0.55;
+}
+
+.quad-placeholder {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+h1, h2 {
   font-weight: 650;
   line-height: 1.25;
 }
 
 h1 {
-  font-size: 1.2rem;
+  font-size: 1.25rem;
   margin: 0 0 0.85rem;
 }
 
 h2 {
   font-size: 1.05rem;
+  margin: 0 0 0.55rem;
+}
+
+.choice-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  margin: 0.5rem 0 0.85rem;
+}
+
+@media (min-width: 520px) {
+  .choice-grid,
+  .choice-grid-2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.choice {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  width: 100%;
+  text-align: left;
+  border: 1px solid var(--line);
+  background: #fff;
+  padding: 1.1rem 1.15rem;
+  cursor: pointer;
+  font: inherit;
+  color: var(--ink);
+}
+
+.choice:hover,
+.choice:focus-visible {
+  border-color: var(--accent);
+}
+
+.choice[aria-pressed="true"],
+.choice.is-selected {
+  border-width: 2px;
+  border-color: var(--accent);
+  padding: calc(1.1rem - 1px) calc(1.15rem - 1px);
+}
+
+.choice-title {
+  font-size: 1.08rem;
+  font-weight: 650;
+}
+
+.choice-sub {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.text-back {
+  border: 0;
+  background: transparent;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.35rem 0;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.role-badge {
+  font-size: 0.88rem;
+  color: var(--muted);
   margin: 0 0 0.45rem;
 }
 
-fieldset {
-  border: 1px solid var(--line);
+.chip-block {
   margin: 0 0 0.85rem;
-  padding: 0.65rem 0.85rem;
 }
 
-legend {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+.chip-label {
   font-size: 0.85rem;
-  font-weight: 600;
-  padding: 0 0.2rem;
+  font-weight: 650;
+  margin: 0 0 0.4rem;
 }
 
 .chips {
@@ -258,14 +237,15 @@ legend {
   gap: 0.35rem;
   border: 1px solid var(--line);
   background: #fff;
-  padding: 0.3rem 0.55rem;
+  padding: 0.35rem 0.6rem;
   margin: 0;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   font-size: 0.88rem;
 }
 
 .chip:has(input:checked) {
+  border-width: 2px;
   border-color: var(--accent);
+  padding: calc(0.35rem - 1px) calc(0.6rem - 1px);
 }
 
 .field {
@@ -292,7 +272,7 @@ label {
 input[type="number"] {
   width: 100%;
   max-width: 14rem;
-  padding: 0.35rem 0.45rem;
+  padding: 0.4rem 0.5rem;
   border: 1px solid var(--line);
   background: #fff;
   color: var(--ink);
@@ -301,8 +281,7 @@ input[type="number"] {
 
 input:focus-visible,
 button:focus-visible,
-a:focus-visible,
-.step-tab:focus-visible {
+a:focus-visible {
   outline: 2px solid var(--accent);
   outline-offset: 2px;
 }
@@ -310,7 +289,7 @@ a:focus-visible,
 .hint {
   color: var(--muted);
   font-size: 0.88rem;
-  margin: 0 0 0.55rem;
+  margin: 0 0 0.5rem;
 }
 
 .presets {
@@ -320,9 +299,8 @@ a:focus-visible,
   margin-top: 0.35rem;
 }
 
-.preset,
-.step-actions button {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+.preset {
+  font: inherit;
   font-size: 0.85rem;
   border: 1px solid var(--line);
   background: #fff;
@@ -330,21 +308,46 @@ a:focus-visible,
   cursor: pointer;
 }
 
-.step-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: 0.5rem;
+.zahlen-details {
+  border: 1px solid var(--line);
+  padding: 0.5rem 0.75rem;
+  margin: 0.75rem 0 1rem;
 }
 
-.dashboard {
+.zahlen-details summary {
+  cursor: pointer;
+  font-weight: 650;
+}
+
+.zahlen-body {
+  margin-top: 0.75rem;
+}
+
+.lagebild {
+  margin: 0 0 1rem;
+}
+
+.lagebild p {
+  margin: 0 0 0.65rem;
+}
+
+.modell-caption {
+  font-size: 0.75rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 0.65rem;
+}
+
+.tiles {
   display: grid;
-  gap: 0.65rem;
+  gap: 0.55rem;
 }
 
 .tile {
-  background: var(--tile);
   border: 1px solid var(--line);
-  padding: 0.75rem 0.85rem;
+  padding: 0.7rem 0.8rem;
+  background: var(--tile);
 }
 
 .tile-summary {
@@ -359,63 +362,55 @@ a:focus-visible,
 }
 
 .tile-summary h2 {
-  margin: 0 0 0.25rem;
+  margin: 0 0 0.2rem;
+  font-size: 1rem;
 }
 
 .tile-collapsed-line {
   margin: 0;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 0.9rem;
 }
 
 .tile[data-expanded="true"] .tile-body {
   display: block;
-  margin-top: 0.65rem;
+  margin-top: 0.55rem;
   border-top: 1px solid var(--line);
-  padding-top: 0.65rem;
+  padding-top: 0.55rem;
 }
 
 .tile[data-expanded="false"] .tile-body {
   display: none;
 }
 
-.modell {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 0.75rem;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
-  color: var(--muted);
-  margin: 0 0 0.45rem;
-}
-
 .note {
-  margin: 0.4rem 0 0.65rem;
+  margin: 0.4rem 0 0.55rem;
 }
 
 .note-strong {
-  font-weight: 600;
+  font-weight: 650;
 }
 
 table.scenarios {
   width: 100%;
   border-collapse: collapse;
   font-variant-numeric: tabular-nums;
-  margin: 0.55rem 0;
-  font-size: 0.92rem;
+  margin: 0.45rem 0;
+  font-size: 0.9rem;
 }
 
 table.scenarios th,
 table.scenarios td {
   border-bottom: 1px solid var(--line);
   text-align: left;
-  padding: 0.35rem 0.3rem;
+  padding: 0.3rem 0.25rem;
   vertical-align: top;
 }
 
 table.scenarios th {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 650;
+  color: var(--muted);
 }
 
 .euro {
@@ -423,26 +418,24 @@ table.scenarios th {
 }
 
 details.rechtslage-box {
-  margin: 0.65rem 0;
+  margin: 0.55rem 0;
   border: 1px solid var(--line);
-  padding: 0.35rem 0.55rem;
+  padding: 0.3rem 0.5rem;
 }
 
 details.rechtslage-box summary {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   cursor: pointer;
-  font-weight: 600;
+  font-weight: 650;
 }
 
 .cta {
-  margin: 0.75rem 0 0.35rem;
-  padding: 0.55rem 0 0;
+  margin: 0.65rem 0 0.25rem;
+  padding-top: 0.45rem;
   border-top: 1px dotted var(--line);
 }
 
 .cta-werbung {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 0.72rem;
+  font-size: 0.7rem;
   font-weight: 650;
   letter-spacing: 0.04em;
   text-transform: uppercase;
@@ -453,11 +446,10 @@ details.rechtslage-box summary {
 .cta-vertrag {
   font-size: 0.85rem;
   color: var(--muted);
-  margin: 0 0 0.45rem;
+  margin: 0 0 0.4rem;
 }
 
 .cta-link {
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   color: var(--accent);
 }
 
@@ -477,8 +469,33 @@ details.rechtslage-box summary {
   display: none;
 }
 
-.primary-cta-slot {
-  margin-top: 0.35rem;
+.term-help {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.15rem;
+  height: 1.15rem;
+  margin-left: 0.25rem;
+  padding: 0;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  vertical-align: middle;
+}
+
+.term-popover {
+  position: absolute;
+  z-index: 40;
+  max-width: 18rem;
+  background: #fff;
+  border: 1px solid var(--line);
+  padding: 0.65rem 0.75rem;
+  font-size: 0.9rem;
+  color: var(--ink);
+  box-shadow: none;
 }
 
 .site-footer {
@@ -514,35 +531,52 @@ details.rechtslage-box summary {
   display: none !important;
 }
 
-/* Desktop two-pane */
 @media (min-width: 800px) {
-  .spa {
+  .canvas {
     display: grid;
-    grid-template-columns: minmax(16rem, 22rem) minmax(0, 1fr);
-    gap: 1.25rem;
-    align-items: start;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: auto auto;
+    gap: 0.9rem;
   }
 
-  .rail {
-    margin-bottom: 0;
-    position: sticky;
-    top: 0.75rem;
+  #q1-role { grid-column: 1; grid-row: 1; }
+  #q2-context { grid-column: 2; grid-row: 1; }
+  #q3-insight { grid-column: 1; grid-row: 2; }
+  #q4-next { grid-column: 2; grid-row: 2; }
+
+  /* Keep closed quads in layout as faint placeholders on desktop */
+  .quad[data-open="false"] {
+    position: relative;
+    width: auto;
+    height: auto;
+    min-height: 8rem;
+    overflow: visible;
+    clip: auto;
+    opacity: 0.45;
+    visibility: visible;
+    pointer-events: none;
+    transform: none;
+    border-style: dashed;
+    background: transparent;
   }
 
-  .step-panel[hidden] {
-    display: block !important;
+  .quad[data-open="false"] .quad-body {
+    display: none !important;
   }
 
-  .step-actions {
-    display: none;
-  }
-
-  .dashboard {
+  .quad[data-open="false"] .quad-placeholder {
     display: block;
   }
 
-  .dashboard[hidden] {
-    display: block !important;
+  .quad[data-open="true"] .quad-placeholder {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .quad[data-open="true"] {
+    transition: none;
+    transform: none;
   }
 }
 
@@ -555,22 +589,25 @@ details.rechtslage-box summary {
   }
 
   .banner,
-  .step-nav,
-  .step-actions,
-  .presets {
+  .presets,
+  .term-help,
+  .term-popover,
+  .text-back,
+  .quad-placeholder {
     display: none !important;
   }
 
-  .spa {
-    display: block;
-  }
-
-  .rail,
-  .dashboard,
-  .tile {
+  .quad,
+  .quad[data-open="false"] {
+    opacity: 1 !important;
+    visibility: visible !important;
+    pointer-events: auto !important;
+    position: relative !important;
+    border-style: solid !important;
     break-inside: avoid;
   }
 
+  .quad-body,
   .tile[data-expanded="false"] .tile-body {
     display: block !important;
   }
@@ -581,8 +618,6 @@ details.rechtslage-box summary {
 
   .cta-print-only {
     display: block;
-    margin: 0.25rem 0 0;
-    font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
   }
 
   a {
