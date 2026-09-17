@@ -113,6 +113,11 @@
    * Never returns userNdJahre.
    */
   function rndPosture(facts, ruleset) {
+    // A Nutzungsdauer-Gutachten already on file: a second one is not the next step.
+    if (facts && facts.gutachtenVorhanden === true) {
+      return { posture: "suppress", reasons: ["gutachten_vorhanden"] };
+    }
+
     var cfg = (ruleset && ruleset.rndPosture) || {};
     var year = yearFromFacts(facts);
     var reasons = [];

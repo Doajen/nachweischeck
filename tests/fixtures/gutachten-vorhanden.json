@@ -1,0 +1,18 @@
+{
+  "id": "gutachten-vorhanden",
+  "facts": {
+    "rolle": "vermieter",
+    "fertigstellungJahr": 1966,
+    "modernisierung": "keine",
+    "ausweis": "vorhanden",
+    "gebaeudeanteilEur": 150000,
+    "gutachtenVorhanden": true
+  },
+  "expect": {
+    "rndPosture": "suppress",
+    "rndReasons": ["gutachten_vorhanden"],
+    "cards": { "afa": true, "rnd": true },
+    "handoff": { "rnd": false },
+    "rndCta": { "primary": false, "secondaryText": false, "hidden": true }
+  }
+}
