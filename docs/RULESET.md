@@ -10,13 +10,29 @@
 
 Production artifacts must **not** `fetch` JSON.
 
-`scripts/pack.mjs` (Slice D) inlines into both `dist/web` and `dist/kanzlei`:
+`scripts/pack.mjs` inlines into both `dist/web` and `dist/kanzlei`:
 
 - `window.__NC_RULESET__` ← `rulesets/current.json`
 - `window.__NC_COPY__` ← `config/copy.de.json`
 - `window.__NC_AFFILIATES__` ← `config/affiliates.json`
 
 Packed HTML must run with zero network (`file://` and Hostinger). Source JSON remains git-owned; bump by editing `current.json`, then repack.
+
+### Skins are opt-in
+
+`window.__NC_SKIN__` is **not** baked by default. The default pack ships no Kanzlei name at all — no artifact may carry `Muster Kanzlei GmbH` as if it were production. A name is a runtime concern and arrives via `?name=` (`js/skin.js`).
+
+```sh
+node scripts/pack.mjs                      # no skin baked
+node scripts/pack.mjs --skin               # bakes skins/kanzlei.example.json
+node scripts/pack.mjs --skin=skins/x.json  # bakes a specific skin
+```
+
+Use `--skin` only for demos and screenshots. A skin may set `name`, `logoUrl`, `footerExtra` and `accent` only; the packer rejects any skin carrying affiliate keys, and it never overrides copy or the ruleset.
+
+### Rewrite assertions
+
+The packer rewrites two spots in `index.html`: the `css/app.css` stylesheet link and the five `<script src="js/…">` tags. Both rewrites are asserted to have changed the string. If the markup drifts so a pattern no longer matches, the pack **fails** instead of silently emitting an artifact with no CSS or no JS. `dist/kanzlei` is additionally checked to contain no external `<script src=` and no external stylesheet link.
 
 When inlining JSON inside a `<script>` tag, escape every `</script>` / `</Script>` sequence in the serialized string (e.g. replace `<` before `/script` with `\u003c`) so the HTML parser cannot close the script early.
 
