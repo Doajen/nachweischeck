@@ -7,171 +7,205 @@
   <link rel="stylesheet" href="css/app.css">
 </head>
 <body>
-  <a class="skip" href="#main">Zum Inhalt</a>
+  <a class="skip" href="#main" data-copy="a11y.skip"></a>
 
   <header class="site-header">
     <img id="skin-logo" class="skin-logo" alt="" hidden>
     <p class="brand" id="brand">Nachweischeck</p>
-    <p class="tagline">Orientierungshilfe zu Nachweiswegen.</p>
+    <p class="tagline" data-copy="header.tagline"></p>
   </header>
 
   <div id="load-banner" class="banner" hidden role="status"></div>
 
-  <main id="main" class="canvas">
+  <main id="main" class="canvas" data-phase="start">
     <form id="gate-form" novalidate>
-      <section id="q1-role" class="quad" data-open="true" aria-label="Start">
-        <h1 id="gate-heading">Was trifft auf Sie zu?</h1>
+      <section id="q1-role" class="beat" data-open="true" aria-label="Start">
+        <h1 id="gate-heading" data-copy="q1.title"></h1>
         <div class="choice-grid" id="role-grid">
           <button type="button" class="choice" data-role="vermieter">
-            <span class="choice-title">Ich vermiete schon</span>
-            <span class="choice-sub">Bestand vermieten</span>
+            <span class="choice-title" data-copy="role.vermieter"></span>
+            <span class="choice-sub" data-copy="role.vermieter.sub"></span>
           </button>
           <button type="button" class="choice" data-role-group="kaufen">
-            <span class="choice-title">Ich kaufe</span>
-            <span class="choice-sub">Kauf geplant</span>
+            <span class="choice-title" data-copy="role.kaufen"></span>
+            <span class="choice-sub" data-copy="role.kaufen.sub"></span>
           </button>
           <button type="button" class="choice" data-role="verkaeufer">
-            <span class="choice-title">Ich verkaufe</span>
-            <span class="choice-sub">Verkauf / Übergabe</span>
+            <span class="choice-title" data-copy="role.verkaeufer"></span>
+            <span class="choice-sub" data-copy="role.verkaeufer.sub"></span>
           </button>
           <button type="button" class="choice" data-role="mieter">
-            <span class="choice-title">Ich bin Mieter</span>
-            <span class="choice-sub">Nur Ausweis-Orientierung</span>
+            <span class="choice-title" data-copy="role.mieter"></span>
+            <span class="choice-sub" data-copy="role.mieter.sub"></span>
           </button>
         </div>
         <div id="buy-split" class="buy-split" hidden>
-          <p class="hint" id="buy-split-hint">Wozu kaufen Sie?</p>
+          <p class="hint" id="buy-split-hint" data-copy="role.buyHint"></p>
           <div class="choice-grid choice-grid-2">
             <button type="button" class="choice" data-role="kaeufer_vermiet">
-              <span class="choice-title">Zum Vermieten</span>
+              <span class="choice-title" data-copy="role.kaeufer_vermiet"></span>
+              <span class="choice-sub" data-copy="role.kaeufer_vermiet.sub"></span>
             </button>
             <button type="button" class="choice" data-role="kaeufer_eigen">
-              <span class="choice-title">Zum Selbstwohnen</span>
+              <span class="choice-title" data-copy="role.kaeufer_eigen"></span>
+              <span class="choice-sub" data-copy="role.kaeufer_eigen.sub"></span>
             </button>
           </div>
-          <button type="button" class="text-back" id="buy-back">Zurück</button>
+          <button type="button" class="text-back" id="buy-back" data-copy="nav.buyBack"></button>
         </div>
         <input type="hidden" id="rolle" name="rolle" value="">
         <input type="hidden" id="anlass" name="anlass" value="">
         <input type="hidden" id="nutzung" name="nutzung" value="">
       </section>
 
-      <section id="q2-context" class="quad" data-open="false" aria-label="Kontext">
-        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
-        <div class="quad-body" id="q2-body" hidden>
+      <section id="q2-context" class="beat" data-open="false" aria-label="Kontext">
+        <div class="beat-body" id="q2-body" hidden>
           <p class="role-badge" id="role-badge"></p>
+
           <div id="q2-object-fields">
-            <h2>Zum Objekt</h2>
+            <h2 data-copy="q2.title.objekt"></h2>
             <div class="field" id="year-field">
-              <label for="fertigstellungJahr">Fertigstellungsjahr
-                <button type="button" class="term-help" data-term="gesetzliche_groesse" aria-label="Hilfe gesetzliche Größe">?</button>
+              <label for="fertigstellungJahr">
+                <span data-copy="field.fertigstellungJahr"></span>
+                <button type="button" class="term-help" data-term="gesetzliche_groesse" data-copy-aria="glossary.gesetzliche_groesse">?</button>
               </label>
-              <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" placeholder="z. B. 1966">
+              <input type="number" id="fertigstellungJahr" name="fertigstellungJahr" inputmode="numeric" min="1800" max="2100" data-copy-placeholder="field.fertigstellungPlaceholder">
             </div>
-            <div class="chip-block" id="mod-block">
-              <p class="chip-label">Modernisierung</p>
-              <div class="chips">
-                <label class="chip"><input type="radio" name="modernisierung" value="unbekannt" checked> Unbekannt</label>
-                <label class="chip"><input type="radio" name="modernisierung" value="keine"> Keine</label>
-                <label class="chip"><input type="radio" name="modernisierung" value="teilweise"> Teilweise</label>
-                <label class="chip"><input type="radio" name="modernisierung" value="umfassend"> Umfassend</label>
+
+            <div id="mod-group" hidden>
+              <div class="chip-block" id="mod-block">
+                <p class="chip-label" data-copy="chip.modernisierung"></p>
+                <div class="chips">
+                  <label class="chip"><input type="radio" name="modernisierung" value="unbekannt" checked> <span data-copy="chip.mod.unbekannt"></span></label>
+                  <label class="chip"><input type="radio" name="modernisierung" value="keine"> <span data-copy="chip.mod.keine"></span></label>
+                  <label class="chip"><input type="radio" name="modernisierung" value="teilweise"> <span data-copy="chip.mod.teilweise"></span></label>
+                  <label class="chip"><input type="radio" name="modernisierung" value="umfassend"> <span data-copy="chip.mod.umfassend"></span></label>
+                </div>
               </div>
-            </div>
-            <div class="field" id="mod-jahr-wrap" hidden>
-              <label for="modernisierungJahr">Jahr der umfassenden Modernisierung</label>
-              <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
-            </div>
-            <div class="chip-block" id="vermieter-anlass-block" hidden>
-              <p class="chip-label">Vermietung</p>
-              <div class="chips">
-                <label class="chip"><input type="radio" name="vermieter_anlass" value="halten" checked> Bestand halten</label>
-                <label class="chip"><input type="radio" name="vermieter_anlass" value="neu_vermietung"> Neu vermieten</label>
+              <div class="field" id="mod-jahr-wrap" hidden>
+                <label for="modernisierungJahr" data-copy="field.modernisierungJahr"></label>
+                <input type="number" id="modernisierungJahr" name="modernisierungJahr" inputmode="numeric" min="1800" max="2100">
+              </div>
+              <div class="chip-block" id="vermieter-anlass-block" hidden>
+                <p class="chip-label" data-copy="chip.vermietung"></p>
+                <div class="chips">
+                  <label class="chip"><input type="radio" name="vermieter_anlass" value="halten" checked> <span data-copy="chip.halten"></span></label>
+                  <label class="chip"><input type="radio" name="vermieter_anlass" value="neu_vermietung"> <span data-copy="chip.neuVermietung"></span></label>
+                </div>
+              </div>
+              <div class="chip-block" id="gutachten-chip">
+                <div class="chips">
+                  <label class="chip"><input type="checkbox" id="gutachtenVorhanden" name="gutachtenVorhanden"> <span data-copy="gutachten.label"></span></label>
+                </div>
+                <p class="hint" data-copy="gutachten.hint"></p>
               </div>
             </div>
           </div>
 
           <div id="q2-edu" hidden>
-            <h2>Orientierung</h2>
+            <h2 data-copy="q2.title.orientierung"></h2>
             <p id="q2-edu-text"></p>
           </div>
 
           <div class="chip-block" id="ausweis-block">
-            <p class="chip-label">Energieausweis
-              <button type="button" class="term-help" data-term="energieausweis" aria-label="Hilfe Energieausweis">?</button>
+            <p class="chip-label">
+              <span data-copy="chip.ausweis"></span>
+              <button type="button" class="term-help" data-term="energieausweis" data-copy-aria="glossary.energieausweis">?</button>
             </p>
             <div class="chips">
-              <label class="chip"><input type="radio" name="ausweis" value="vorhanden"> Vorhanden</label>
-              <label class="chip"><input type="radio" name="ausweis" value="nicht_vorhanden"> Nicht vorhanden</label>
-              <label class="chip"><input type="radio" name="ausweis" value="unbekannt" checked> Unbekannt</label>
+              <label class="chip"><input type="radio" name="ausweis" value="vorhanden"> <span data-copy="chip.ausweis.vorhanden"></span></label>
+              <label class="chip"><input type="radio" name="ausweis" value="nicht_vorhanden"> <span data-copy="chip.ausweis.nicht"></span></label>
+              <label class="chip"><input type="radio" name="ausweis" value="unbekannt" checked> <span data-copy="chip.ausweis.unbekannt"></span></label>
             </div>
           </div>
 
-          <details id="zahlen-details" class="zahlen-details" hidden>
-            <summary id="zahlen-summary">Optionale Beträge</summary>
-            <div class="zahlen-body">
-              <div class="field">
-                <label for="gebaeudeanteilEur">Gebäudeanteil in €
-                  <button type="button" class="term-help" data-term="gebaeudeanteil" aria-label="Hilfe Gebäudeanteil">?</button>
-                </label>
-                <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
-              </div>
-              <p class="hint">Oder Kaufpreis und eigener Split-%:</p>
-              <div class="field-row">
-                <div class="field">
-                  <label for="kaufpreisEur">Kaufpreis in €</label>
-                  <input type="number" id="kaufpreisEur" name="kaufpreisEur" inputmode="decimal" min="0" step="1">
-                </div>
-                <div class="field">
-                  <label for="splitPct">Gebäudeanteil-%</label>
-                  <input type="number" id="splitPct" name="splitPct" inputmode="decimal" min="0" max="100" step="0.1">
-                </div>
-              </div>
-              <div class="field">
-                <label for="grenzsatzPct">Annahme Grenzsatz %
-                  <button type="button" class="term-help" data-term="grenzsatz" aria-label="Hilfe Grenzsatz">?</button>
-                </label>
-                <p class="hint" id="annahme-grenz-hint">Optional. Leer = keine Steuer-Cash-Spalte.</p>
-                <input type="number" id="grenzsatzPct" name="grenzsatzPct" inputmode="decimal" min="0" max="100" step="0.1">
-                <div class="presets">
-                  <button type="button" class="preset" data-set-grenz="30">Annahme 30 %</button>
-                  <button type="button" class="preset" data-set-grenz="42">Annahme 42 %</button>
-                  <button type="button" class="preset" data-set-grenz="45">Annahme 45 %</button>
-                </div>
-              </div>
-              <div class="field">
-                <label for="honorarEur">Annahme Honorar €</label>
-                <p class="hint" id="annahme-honorar-hint">Optional. Leer = keine Amortisationsangabe.</p>
-                <input type="number" id="honorarEur" name="honorarEur" inputmode="decimal" min="0" step="1">
-                <div class="presets">
-                  <button type="button" class="preset" data-set-honorar="900">Annahme 900 €</button>
-                </div>
-              </div>
-              <div class="field-row">
-                <div class="field">
-                  <label for="splitPctA">Split A %</label>
-                  <input type="number" id="splitPctA" name="splitPctA" inputmode="decimal" min="0" max="100" step="0.1">
-                </div>
-                <div class="field">
-                  <label for="splitPctB">Split B %</label>
-                  <input type="number" id="splitPctB" name="splitPctB" inputmode="decimal" min="0" max="100" step="0.1">
-                </div>
-              </div>
-              <p class="hint" id="kpa-compare-hint">Zwei Split-% zum Vergleich — leer lassen, wenn nicht benötigt.</p>
-            </div>
-          </details>
-
-          <button type="button" class="text-back" id="role-back">Andere Rolle wählen</button>
+          <button type="button" class="text-back" id="role-back" data-copy="nav.roleBack"></button>
         </div>
       </section>
 
-      <section id="q3-insight" class="quad" data-open="false" aria-label="Lagebild">
-        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
-        <div class="quad-body" id="q3-body" hidden></div>
+      <section id="q3-insight" class="beat" data-open="false" aria-label="Einordnung">
+        <div class="beat-body" id="q3-body" hidden></div>
+
+        <details id="rechenbeispiele" class="rechenbeispiele" hidden>
+          <summary data-copy="q3.rechenbeispiele"></summary>
+          <p class="hint" data-copy="q3.rechenbeispieleHint"></p>
+          <div id="rechenbeispiele-body"></div>
+        </details>
+
+        <details id="gutachter-details" class="gutachter-details" hidden>
+          <summary data-copy="gutachter.title"></summary>
+          <p class="hint" data-copy="gutachter.hint"></p>
+          <ul class="gutachter-list">
+            <li data-copy="gutachter.dach"></li>
+            <li data-copy="gutachter.fenster"></li>
+            <li data-copy="gutachter.heizung"></li>
+            <li data-copy="gutachter.leitungen"></li>
+            <li data-copy="gutachter.modernisierung"></li>
+          </ul>
+        </details>
       </section>
 
-      <section id="q4-next" class="quad" data-open="false" aria-label="Nächster Schritt">
-        <p class="quad-placeholder" data-placeholder>Wird freigeschaltet, sobald die vorherigen Angaben stehen.</p>
-        <div class="quad-body" id="q4-body" hidden></div>
+      <section id="q4-zahlen" class="beat" aria-label="Eigene Beträge" hidden>
+        <details id="zahlen-details" class="zahlen-details">
+          <summary id="zahlen-summary" data-copy="zahlen.summary"></summary>
+          <div class="zahlen-body">
+            <p class="hint" data-copy="zahlen.intro"></p>
+            <div class="field">
+              <label for="gebaeudeanteilEur">
+                <span data-copy="field.gebaeudeanteil"></span>
+                <button type="button" class="term-help" data-term="gebaeudeanteil" data-copy-aria="glossary.gebaeudeanteil">?</button>
+              </label>
+              <input type="number" id="gebaeudeanteilEur" name="gebaeudeanteilEur" inputmode="decimal" min="0" step="1">
+            </div>
+            <p class="hint" data-copy="field.splitHint"></p>
+            <div class="field-row">
+              <div class="field">
+                <label for="kaufpreisEur" data-copy="field.kaufpreis"></label>
+                <input type="number" id="kaufpreisEur" name="kaufpreisEur" inputmode="decimal" min="0" step="1">
+              </div>
+              <div class="field">
+                <label for="splitPct" data-copy="field.splitPct"></label>
+                <input type="number" id="splitPct" name="splitPct" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+            </div>
+            <div class="field">
+              <label for="grenzsatzPct">
+                <span data-copy="annahme.grenzsatz"></span>
+                <button type="button" class="term-help" data-term="grenzsatz" data-copy-aria="glossary.grenzsatz">?</button>
+              </label>
+              <p class="hint" id="annahme-grenz-hint" data-copy="annahme.grenzsatzHint"></p>
+              <input type="number" id="grenzsatzPct" name="grenzsatzPct" inputmode="decimal" min="0" max="100" step="0.1">
+              <div class="presets">
+                <button type="button" class="preset" data-set-grenz="30"></button>
+                <button type="button" class="preset" data-set-grenz="42"></button>
+                <button type="button" class="preset" data-set-grenz="45"></button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="honorarEur" data-copy="annahme.honorar"></label>
+              <p class="hint" id="annahme-honorar-hint" data-copy="annahme.honorarHint"></p>
+              <input type="number" id="honorarEur" name="honorarEur" inputmode="decimal" min="0" step="1">
+              <div class="presets">
+                <button type="button" class="preset" data-set-honorar="900"></button>
+              </div>
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label for="splitPctA" data-copy="field.splitA"></label>
+                <input type="number" id="splitPctA" name="splitPctA" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+              <div class="field">
+                <label for="splitPctB" data-copy="field.splitB"></label>
+                <input type="number" id="splitPctB" name="splitPctB" inputmode="decimal" min="0" max="100" step="0.1">
+              </div>
+            </div>
+            <p class="hint" id="kpa-compare-hint" data-copy="kpa.compareHint"></p>
+          </div>
+        </details>
+      </section>
+
+      <section id="q4-next" class="beat" data-open="false" aria-label="Nächster Schritt">
+        <div class="beat-body" id="q4-body" hidden></div>
       </section>
     </form>
   </main>
@@ -184,22 +218,22 @@
     <p id="kanzlei-line" class="kanzlei-line" hidden></p>
     <p id="skin-footer-extra" class="skin-footer-extra" hidden></p>
     <p class="legal-links">
-      <a href="#rechtslage">Rechtslage</a>
+      <a href="#rechtslage" data-copy="legal.title.rechtslage"></a>
       ·
-      <a href="#impressum">Impressum</a>
+      <a href="#impressum" data-copy="legal.title.impressum"></a>
       ·
-      <a href="#datenschutz">Datenschutz</a>
+      <a href="#datenschutz" data-copy="legal.title.datenschutz"></a>
     </p>
     <section id="rechtslage" class="legal-block">
-      <h2>Rechtslage (RND)</h2>
+      <h2 data-copy="legal.title.rechtslage"></h2>
       <p id="rechtslage-body"></p>
     </section>
     <section id="impressum" class="legal-block">
-      <h2>Impressum</h2>
+      <h2 data-copy="legal.title.impressum"></h2>
       <p id="impressum-body"></p>
     </section>
     <section id="datenschutz" class="legal-block">
-      <h2>Datenschutz</h2>
+      <h2 data-copy="legal.title.datenschutz"></h2>
       <p id="datenschutz-body"></p>
     </section>
   </footer>

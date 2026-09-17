@@ -89,14 +89,14 @@ body {
   gap: 0.85rem;
 }
 
-.quad {
+.beat {
   border: 1px solid var(--line);
   background: #fff;
   padding: 1rem 1.1rem;
   min-height: 6rem;
 }
 
-.quad[data-open="false"] {
+.beat[data-open="false"] {
   opacity: 0;
   visibility: hidden;
   transform: translateY(8px);
@@ -108,7 +108,7 @@ body {
   clip: rect(0, 0, 0, 0);
 }
 
-.quad[data-open="true"] {
+.beat[data-open="true"] {
   opacity: 1;
   visibility: visible;
   transform: none;
@@ -118,18 +118,6 @@ body {
   height: auto;
   overflow: visible;
   clip: auto;
-}
-
-.quad[data-open="true"][data-locked-placeholder="true"] {
-  background: transparent;
-  border-style: dashed;
-  opacity: 0.55;
-}
-
-.quad-placeholder {
-  margin: 0;
-  color: var(--muted);
-  font-size: 0.9rem;
 }
 
 h1, h2 {
@@ -543,38 +531,10 @@ details.rechtslage-box summary {
   #q2-context { grid-column: 2; grid-row: 1; }
   #q3-insight { grid-column: 1; grid-row: 2; }
   #q4-next { grid-column: 2; grid-row: 2; }
-
-  /* Keep closed quads in layout as faint placeholders on desktop */
-  .quad[data-open="false"] {
-    position: relative;
-    width: auto;
-    height: auto;
-    min-height: 8rem;
-    overflow: visible;
-    clip: auto;
-    opacity: 0.45;
-    visibility: visible;
-    pointer-events: none;
-    transform: none;
-    border-style: dashed;
-    background: transparent;
-  }
-
-  .quad[data-open="false"] .quad-body {
-    display: none !important;
-  }
-
-  .quad[data-open="false"] .quad-placeholder {
-    display: block;
-  }
-
-  .quad[data-open="true"] .quad-placeholder {
-    display: none;
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .quad[data-open="true"] {
+  .beat[data-open="true"] {
     transition: none;
     transform: none;
   }
@@ -592,13 +552,12 @@ details.rechtslage-box summary {
   .presets,
   .term-help,
   .term-popover,
-  .text-back,
-  .quad-placeholder {
+  .text-back {
     display: none !important;
   }
 
-  .quad,
-  .quad[data-open="false"] {
+  .beat,
+  .beat[data-open="false"] {
     opacity: 1 !important;
     visibility: visible !important;
     pointer-events: auto !important;
@@ -607,7 +566,7 @@ details.rechtslage-box summary {
     break-inside: avoid;
   }
 
-  .quad-body,
+  .beat-body,
   .tile[data-expanded="false"] .tile-body {
     display: block !important;
   }

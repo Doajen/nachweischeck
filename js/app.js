@@ -154,10 +154,6 @@
 
   function unlock(facts) {
     var rolle = facts.rolle;
-    var placeholders = document.querySelectorAll("[data-placeholder]");
-    for (var i = 0; i < placeholders.length; i++) {
-      placeholders[i].textContent = t("quad.placeholder");
-    }
 
     setQuadOpen("q1-role", true);
 
@@ -184,9 +180,9 @@
     $("q2-object-fields").hidden = !afaPath;
     $("q2-edu").hidden = !ausweisPath;
     $("year-field").hidden = !afaPath;
-    $("mod-block").hidden = !afaPath;
+    $("mod-group").hidden = !afaPath;
     $("vermieter-anlass-block").hidden = rolle !== "vermieter";
-    $("zahlen-details").hidden = !afaPath;
+    $("q4-zahlen").hidden = !afaPath;
     $("ausweis-block").hidden = false;
 
     if (ausweisPath) {
@@ -614,6 +610,25 @@
     renderAll();
   }
 
+  /** Fill every data-copy / data-copy-placeholder / data-copy-aria node from copy.de.json. */
+  function applyCopyBindings() {
+    var text = document.querySelectorAll("[data-copy]");
+    for (var i = 0; i < text.length; i++) {
+      text[i].textContent = t(text[i].getAttribute("data-copy"));
+    }
+    var ph = document.querySelectorAll("[data-copy-placeholder]");
+    for (var j = 0; j < ph.length; j++) {
+      ph[j].setAttribute(
+        "placeholder",
+        t(ph[j].getAttribute("data-copy-placeholder"))
+      );
+    }
+    var aria = document.querySelectorAll("[data-copy-aria]");
+    for (var k = 0; k < aria.length; k++) {
+      aria[k].setAttribute("aria-label", t(aria[k].getAttribute("data-copy-aria")));
+    }
+  }
+
   function renderFooter() {
     var name = t("product.name");
     document.title = name;
@@ -641,14 +656,7 @@
       "</p><p>" +
       escapeHtml(t("legal.keineSteuerberatung")) +
       "</p>";
-    $("zahlen-summary").textContent = t("zahlen.summary");
-    $("buy-split-hint").textContent = t("role.buyHint");
-    var gHint = $("annahme-grenz-hint");
-    if (gHint) gHint.textContent = t("annahme.grenzsatzHint");
-    var hHint = $("annahme-honorar-hint");
-    if (hHint) hHint.textContent = t("annahme.honorarHint");
-    var kHint = $("kpa-compare-hint");
-    if (kHint) kHint.textContent = t("kpa.compareHint");
+    applyCopyBindings();
     var presets = document.querySelectorAll("[data-set-grenz]");
     for (var i = 0; i < presets.length; i++) {
       var pct = presets[i].getAttribute("data-set-grenz");
@@ -656,8 +664,6 @@
     }
     var hPreset = document.querySelector("[data-set-honorar]");
     if (hPreset) hPreset.textContent = t("annahme.presetHonorar");
-    var ph = document.querySelectorAll("[data-placeholder]");
-    for (var j = 0; j < ph.length; j++) ph[j].textContent = t("quad.placeholder");
     NC.skin.apply(state.skin, t);
   }
 

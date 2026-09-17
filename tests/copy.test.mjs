@@ -147,6 +147,8 @@ describe("copy / copyKeys parity", () => {
       "persist.label",
       "persist.clear",
       "datenschutz.optionalPersist",
+      "quad.placeholder",
+      "dashboard.empty",
       "lagebild.beat4.pruefen",
       "lagebild.beat4.unsicher",
       "lagebild.beat4.unwirtschaftlich",

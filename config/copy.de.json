@@ -138,8 +138,6 @@
   "legal.keineSteuerberatung": "Dieses Tool gibt keine Steuerberatung, keine Bewertung und keine Einzelfallauskunft.",
   "deg5a.outOfScope": "Die degressive AfA nach § 7 Abs. 5a EStG ist nicht Gegenstand dieses Checks.",
   "scope.outOfScope": "Denkmal-AfA (§ 7i, § 10f EStG), § 7b EStG, die QNG-Förderung und § 35c EStG sind nicht Gegenstand dieses Checks.",
-  "dashboard.empty": "Noch keine Orientierung sichtbar.",
-  "quad.placeholder": "Wird freigeschaltet, sobald die vorherigen Angaben stehen.",
   "impressum.betreiber": "[PLATZHALTER: Name / Firma des Betreibers]",
   "impressum.anschrift": "[PLATZHALTER: Straße, PLZ Ort]",
   "impressum.kontakt": "[PLATZHALTER: E-Mail / Telefon]",
