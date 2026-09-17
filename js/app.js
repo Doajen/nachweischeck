@@ -1,5 +1,6 @@
 /**
- * Educational quadrants + glossary. Calc/route/affiliates unchanged.
+ * Beat unlock machine + render. No math: calc/route/affiliates own that.
+ * Phases on #main: start (Rolle only) | context (Q2 open) | insight (Q3/Q4 open).
  */
 (function () {
   "use strict";
@@ -9,12 +10,23 @@
     copy: null,
     skin: {},
     ready: false,
-    expanded: "rnd",
     buyOpen: false,
+    printRestore: null,
   };
 
-  var AFAC_PATHS = { vermieter: true, kaeufer_vermiet: true };
+  var AFA_PATHS = { vermieter: true, kaeufer_vermiet: true };
   var AUSWEIS_PATHS = { mieter: true, kaeufer_eigen: true, verkaeufer: true };
+
+  var FORBIDDEN = [
+    "Ihre Restnutzungsdauer",
+    "landet bei",
+    "typischerweise 20–30",
+    "Anerkennungsquote",
+    "Steuerspar-Garantie",
+    "gute Erfolgsaussicht",
+    "Optimierung",
+    "Garantierte",
+  ];
 
   function $(id) {
     return document.getElementById(id);
@@ -40,8 +52,25 @@
     return n;
   }
 
+  /** Finite integer year only; anything else keeps the later beats shut. */
   function yearKnown(facts) {
-    return Number.isFinite(facts.fertigstellungJahr);
+    var y = facts.fertigstellungJahr;
+    return Number.isFinite(y) && y === Math.trunc(y);
+  }
+
+  function setHidden(id, hidden) {
+    var el = $(id);
+    if (el) el.hidden = !!hidden;
+  }
+
+  function setBeatOpen(id, open) {
+    var el = $(id);
+    if (el) el.setAttribute("data-open", open ? "true" : "false");
+  }
+
+  function closeDetails(id) {
+    var el = $(id);
+    if (el) el.open = false;
   }
 
   function syncHiddenFromRolle(rolle) {
@@ -72,6 +101,12 @@
     if (!facts.rolle) delete facts.rolle;
     if (!facts.anlass) delete facts.anlass;
     if (!facts.nutzung) delete facts.nutzung;
+
+    // Strict boolean: a checkbox is checked or it is not. Never the string "true".
+    var gutachten = $("gutachtenVorhanden");
+    if (gutachten && gutachten.checked === true) {
+      facts.gutachtenVorhanden = true;
+    }
 
     var anteil = optionalNumber("gebaeudeanteilEur");
     var kauf = optionalNumber("kaufpreisEur");
@@ -118,6 +153,12 @@
     return "";
   }
 
+  function postureBodyKey(posture) {
+    if (posture === "widen") return "posture.body.unsicher";
+    if (posture === "suppress") return "posture.body.unwirtschaftlich";
+    return "posture.body.pruefen";
+  }
+
   function escapeHtml(s) {
     return String(s)
       .replace(/&/g, "&amp;")
@@ -131,85 +172,103 @@
     $("load-banner").textContent = msg;
   }
 
-  function setQuadOpen(id, open) {
-    var el = $(id);
-    if (!el) return;
-    el.setAttribute("data-open", open ? "true" : "false");
-  }
-
   function termBtn(term, label) {
     return (
       '<button type="button" class="term-help" data-term="' +
       escapeHtml(term) +
-      '" aria-label="Hilfe ' +
+      '" aria-label="' +
       escapeHtml(label || term) +
       '">?</button>'
     );
   }
 
-  function updateModJahrVisibility() {
-    var wrap = $("mod-jahr-wrap");
-    if (wrap) wrap.hidden = radioValue("modernisierung") !== "umfassend";
+  function para(text, cls) {
+    return (
+      '<p' + (cls ? ' class="' + cls + '"' : "") + ">" + escapeHtml(text) + "</p>"
+    );
   }
 
-  function unlock(facts) {
-    var rolle = facts.rolle;
+  function updateModJahrVisibility() {
+    setHidden("mod-jahr-wrap", radioValue("modernisierung") !== "umfassend");
+  }
 
-    setQuadOpen("q1-role", true);
+  /**
+   * Decide which beats are open. Returns { path, phase, showInsight }.
+   */
+  function unlock(facts) {
+    var rolle = facts.rolle || null;
 
     if (!rolle) {
-      setQuadOpen("q2-context", false);
-      setQuadOpen("q3-insight", false);
-      setQuadOpen("q4-next", false);
-      $("q2-body").hidden = true;
-      $("q3-body").hidden = true;
-      $("q4-body").hidden = true;
-      $("buy-split").hidden = !state.buyOpen;
-      $("role-grid").hidden = state.buyOpen;
-      return { path: null, showInsight: false };
+      $("main").setAttribute("data-phase", "start");
+      setBeatOpen("q1-role", true);
+      setBeatOpen("q2-context", false);
+      setBeatOpen("q3-insight", false);
+      setBeatOpen("q4-next", false);
+      setHidden("q2-body", true);
+      setHidden("q3-body", true);
+      setHidden("q4-body", true);
+      setHidden("mod-group", true);
+      setHidden("q4-zahlen", true);
+      setHidden("rechenbeispiele", true);
+      setHidden("gutachter-details", true);
+      setHidden("buy-split", !state.buyOpen);
+      setHidden("role-grid", state.buyOpen);
+      setHidden("gate-heading", false);
+      return { path: null, phase: "start", showInsight: false };
     }
 
-    $("buy-split").hidden = true;
-    $("role-grid").hidden = false;
-    setQuadOpen("q2-context", true);
-    $("q2-body").hidden = false;
-
-    var afaPath = !!AFAC_PATHS[rolle];
+    var afaPath = !!AFA_PATHS[rolle];
     var ausweisPath = !!AUSWEIS_PATHS[rolle];
+    var haveYear = yearKnown(facts);
+    var showInsight = ausweisPath || (afaPath && haveYear);
+    var phase = showInsight ? "insight" : "context";
 
-    $("q2-object-fields").hidden = !afaPath;
-    $("q2-edu").hidden = !ausweisPath;
-    $("year-field").hidden = !afaPath;
-    $("mod-group").hidden = !afaPath;
-    $("vermieter-anlass-block").hidden = rolle !== "vermieter";
-    $("q4-zahlen").hidden = !afaPath;
-    $("ausweis-block").hidden = false;
+    $("main").setAttribute("data-phase", phase);
+
+    // Beat 0 collapses once the insight is open: the answers rail carries the
+    // role badge and the reset link, so the four cards stop dominating.
+    setBeatOpen("q1-role", !showInsight);
+    setHidden("role-grid", showInsight);
+    setHidden("gate-heading", showInsight);
+    setHidden("buy-split", true);
+    state.buyOpen = false;
+
+    setBeatOpen("q2-context", true);
+    setHidden("q2-body", false);
+
+    setHidden("q2-object-fields", !afaPath);
+    setHidden("year-field", !afaPath);
+    setHidden("q2-edu", !ausweisPath);
+
+    // Beat 2: nothing beyond the year until the year is a finite integer.
+    setHidden("mod-group", !(afaPath && haveYear));
+    setHidden("vermieter-anlass-block", rolle !== "vermieter");
+    setHidden("ausweis-block", afaPath && !haveYear);
+    updateModJahrVisibility();
+
+    $("role-badge").textContent =
+      t("role.badgePrefix") + " " + t("role." + rolle);
 
     if (ausweisPath) {
       $("q2-edu-text").textContent =
-        rolle === "mieter"
-          ? t("mieter.ausweisOnly") + " " + t("mieter.forward")
-          : t("edu.ausweisPath");
+        rolle === "mieter" ? t("mieter.ausweisOnly") : t("edu.ausweisPath");
     }
 
-    $("role-badge").textContent =
-      t("role.badgePrefix") + " " + (t("role." + rolle) || rolle);
+    setBeatOpen("q3-insight", showInsight);
+    setBeatOpen("q4-next", showInsight);
+    setHidden("q3-body", !showInsight);
+    setHidden("q4-body", !showInsight);
 
-    updateModJahrVisibility();
+    // Beat 4 and the two expanders exist only where AfA/RND applies.
+    setHidden("q4-zahlen", !(afaPath && showInsight));
+    setHidden("rechenbeispiele", !(afaPath && showInsight));
+    setHidden("gutachter-details", !(afaPath && showInsight));
 
-    var showInsight = false;
-    if (ausweisPath) {
-      showInsight = true;
-    } else if (afaPath && yearKnown(facts)) {
-      showInsight = true;
-    }
-
-    setQuadOpen("q3-insight", showInsight);
-    setQuadOpen("q4-next", showInsight);
-    $("q3-body").hidden = !showInsight;
-    $("q4-body").hidden = !showInsight;
-
-    return { path: afaPath ? "afa" : "ausweis", showInsight: showInsight };
+    return {
+      path: afaPath ? "afa" : "ausweis",
+      phase: phase,
+      showInsight: showInsight,
+    };
   }
 
   function renderCta(lever, slot, labelKey, variant) {
@@ -241,182 +300,170 @@
     );
   }
 
+  /** Four legal sentences, then the posture word. Never a diagnosed ND. */
   function renderLagebild(routed) {
-    if (!routed.afa || routed.afa.blocked) return "";
+    if (!routed.afa || routed.afa.blocked) {
+      return '<section class="lagebild">' + para(t("afa.needYear")) + "</section>";
+    }
     var beat1 = t("lagebild.beat1")
       .split("{satzPct}")
       .join(String(routed.afa.satzPct).replace(".", ","))
       .split("{ndJahre}")
       .join(String(routed.afa.gesetzlicheNdJahre));
-    var postureBodyKey = "posture.body.pruefen";
-    if (routed.rndPosture === "widen") postureBodyKey = "posture.body.unsicher";
-    if (routed.rndPosture === "suppress") postureBodyKey = "posture.body.unwirtschaftlich";
-    return (
+
+    var html =
       '<section class="lagebild" id="lagebild">' +
       "<h2>" +
       escapeHtml(t("lagebild.title")) +
       " " +
-      termBtn("afa", "AfA") +
+      termBtn("afa", t("glossary.afa")) +
       " " +
-      termBtn("rnd", "RND") +
+      termBtn("rnd", t("glossary.rnd")) +
       "</h2>" +
-      '<p class="modell-caption">' +
-      escapeHtml(t("modell.caption")) +
-      "</p>" +
+      para(t("modell.caption"), "modell-caption") +
       "<p>" +
       escapeHtml(beat1) +
       " " +
-      termBtn("gesetzliche_groesse", "gesetzliche Größe") +
+      termBtn("gesetzliche_groesse", t("glossary.gesetzliche_groesse")) +
       "</p>" +
       "<p>" +
       escapeHtml(t("lagebild.beat2")) +
       " " +
-      termBtn("nachweis", "Nachweis") +
+      termBtn("nachweis", t("glossary.nachweis")) +
       "</p>" +
       "<p>" +
       escapeHtml(t("lagebild.beat3")) +
       " " +
-      termBtn("szenario_nd", "Szenario ND") +
+      termBtn("szenario_nd", t("glossary.szenario_nd")) +
       "</p>" +
-      "<p>" +
-      escapeHtml(t("lagebild.beat4")) +
-      "</p>" +
+      para(t("lagebild.beat4")) +
       '<p class="posture"><strong>' +
-      escapeHtml(t("posture.lead")) +
-      ": " +
-      escapeHtml(postureLabel(routed.rndPosture)) +
+      escapeHtml(t("posture.lead") + ": " + postureLabel(routed.rndPosture)) +
       "</strong> " +
-      escapeHtml(t(postureBodyKey)) +
-      "</p>" +
-      "</section>"
-    );
-  }
+      escapeHtml(t(postureBodyKey(routed.rndPosture))) +
+      "</p>";
 
-  function scenarioById(routed, id) {
-    if (!routed.scenarios) return null;
-    for (var i = 0; i < routed.scenarios.length; i++) {
-      if (routed.scenarios[i].id === id) return routed.scenarios[i];
-    }
-    return null;
-  }
-
-  function tileShell(id, title, collapsed, body, expanded) {
-    return (
-      '<article class="tile" data-tile="' +
-      escapeHtml(id) +
-      '" data-expanded="' +
-      (expanded ? "true" : "false") +
-      '">' +
-      '<button type="button" class="tile-summary" data-expand="' +
-      escapeHtml(id) +
-      '"><h2>' +
-      escapeHtml(title) +
-      "</h2><p class=\"tile-collapsed-line\">" +
-      collapsed +
-      "</p></button>" +
-      '<div class="tile-body">' +
-      body +
-      "</div></article>"
-    );
-  }
-
-  function renderRndBody(routed) {
-    var html = "";
-    if (routed.rndPosture === "suppress") {
-      html += "<p class=\"note\">" + escapeHtml(t("rnd.unwirtschaftlich")) + "</p>";
+    if (routed.rndReasons && routed.rndReasons.indexOf("gutachten_vorhanden") !== -1) {
+      html += para(t("rnd.gutachtenVorhanden"), "note");
+    } else if (routed.rndPosture === "suppress") {
+      html += para(t("rnd.unwirtschaftlich"), "note");
     } else if (routed.rndPosture === "widen") {
-      html += "<p class=\"note\">" + escapeHtml(t("rnd.widenNote")) + "</p>";
-    }
-
-    var showTax = routed.grenzsatzPct != null;
-    var showAmort = routed.honorarEur != null && showTax;
-    if (routed.scenarios && routed.scenarios.length) {
-      html +=
-        '<table class="scenarios"><thead><tr><th>' +
-        escapeHtml(t("table.szenario")) +
-        "</th><th>" +
-        escapeHtml(t("table.satz")) +
-        "</th>";
-      if (routed.gebaeudeanteilEur != null) html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
-      if (showTax) html += "<th>" + escapeHtml(t("label.steuerCash")) + "</th>";
-      if (showAmort) html += "<th>" + escapeHtml(t("label.amort")) + "</th>";
-      html += "</tr></thead><tbody>";
-      for (var i = 0; i < routed.scenarios.length; i++) {
-        var sc = routed.scenarios[i];
-        var szenSatz = sc.ndJahre ? 100 / sc.ndJahre : null;
-        html +=
-          "<tr><td>" +
-          escapeHtml(sc.label) +
-          "</td><td>" +
-          escapeHtml(formatPct(Math.round(szenSatz * 1000) / 1000)) +
-          "</td>";
-        if (routed.gebaeudeanteilEur != null) {
-          html +=
-            sc.mehrAfa && !sc.mehrAfa.ratesOnly
-              ? '<td class="euro">' + escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) + "</td>"
-              : "<td>—</td>";
-        }
-        if (showTax) {
-          html +=
-            sc.steuerCash && !sc.steuerCash.ratesOnly
-              ? '<td class="euro">' + escapeHtml(formatEuro(sc.steuerCash.eurJahr)) + "</td>"
-              : "<td>—</td>";
-        }
-        if (showAmort) {
-          html +=
-            sc.amort && !sc.amort.ratesOnly
-              ? "<td>" + escapeHtml(formatNum(sc.amort.jahre, 1)) + "</td>"
-              : "<td>—</td>";
-        }
-        html += "</tr>";
-      }
-      html += "</tbody></table>";
-      html +=
-        '<p class="modell-caption">' + escapeHtml(t("modell.caption")) + "</p>";
+      html += para(t("rnd.widenNote"), "note");
     }
 
     html +=
-      '<details class="rechtslage-box"><summary>' +
-      escapeHtml(t("details.hintergrund")) +
-      "</summary><p>" +
-      escapeHtml(t("rnd.rechtslage")) +
-      "</p></details>";
+      para(t("deg5a.outOfScope"), "meta") + para(t("scope.outOfScope"), "meta");
+    return html + "</section>";
+  }
 
-    if (routed.rndCta && routed.rndCta.primary) {
-      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
-    } else if (routed.rndCta && routed.rndCta.secondaryText) {
-      html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
+  /** Role lesson for the paths that never see AfA or ND scenarios. */
+  function renderRoleLesson(routed) {
+    var rolle = routed.rolle;
+    var html = '<section class="lesson">' + "<h2>" + escapeHtml(t("q3.lessonTitle")) + "</h2>";
+
+    if (rolle === "mieter") {
+      html += para(t("mieter.ausweisOnly")) + para(t("lesson.mieter"));
+    } else if (rolle === "verkaeufer") {
+      html += para(t("edu.ausweisPath")) + para(t("lesson.verkaeufer"));
+    } else {
+      html += para(t("edu.ausweisPath")) + para(t("lesson.kaeufer_eigen"));
     }
+
+    var gegKey = "geg.keinAnlass";
+    if (routed.geg === "pflicht_orientierung") gegKey = "geg.pflicht";
+    else if (routed.geg === "ausnahme_pruefen") gegKey = "geg.ausnahme";
+    else if (routed.geg === "vorhanden") gegKey = "geg.vorhanden";
+    html +=
+      "<p>" +
+      escapeHtml(t(gegKey)) +
+      " " +
+      termBtn("energieausweis", t("glossary.energieausweis")) +
+      "</p>";
+
+    if (rolle === "mieter") {
+      html +=
+        "<h2>" +
+        escapeHtml(t("mieter.checklistTitle")) +
+        "</h2><ul>" +
+        "<li>" +
+        escapeHtml(t("mieter.check1")) +
+        "</li><li>" +
+        escapeHtml(t("mieter.check2")) +
+        "</li><li>" +
+        escapeHtml(t("mieter.check3")) +
+        "</li></ul>" +
+        para(t("mieter.forward"), "note");
+    }
+
+    return html + "</section>";
+  }
+
+  /** Scenario table: euro columns appear only once the user typed the inputs. */
+  function renderScenarioTable(routed) {
+    if (!routed.scenarios || !routed.scenarios.length) return "";
+    var showMehr = routed.gebaeudeanteilEur != null;
+    var showTax = showMehr && routed.grenzsatzPct != null;
+    var showAmort = showTax && routed.honorarEur != null;
+
+    var html =
+      '<table class="scenarios"><thead><tr><th>' +
+      escapeHtml(t("table.szenario")) +
+      "</th><th>" +
+      escapeHtml(t("table.satz")) +
+      "</th>";
+    if (showMehr) html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
+    if (showTax) html += "<th>" + escapeHtml(t("label.steuerCash")) + "</th>";
+    if (showAmort) html += "<th>" + escapeHtml(t("label.amort")) + "</th>";
+    html += "</tr></thead><tbody>";
+
+    for (var i = 0; i < routed.scenarios.length; i++) {
+      var sc = routed.scenarios[i];
+      var szenSatz = sc.ndJahre ? Math.round((100 / sc.ndJahre) * 1000) / 1000 : null;
+      html +=
+        "<tr><td>" +
+        escapeHtml(sc.label) +
+        "</td><td>" +
+        escapeHtml(formatPct(szenSatz)) +
+        "</td>";
+      if (showMehr) {
+        html +=
+          sc.mehrAfa && !sc.mehrAfa.ratesOnly
+            ? '<td class="euro">' + escapeHtml(formatEuro(sc.mehrAfa.mehrAfaEur)) + "</td>"
+            : "<td>—</td>";
+      }
+      if (showTax) {
+        html +=
+          sc.steuerCash && !sc.steuerCash.ratesOnly
+            ? '<td class="euro">' + escapeHtml(formatEuro(sc.steuerCash.eurJahr)) + "</td>"
+            : "<td>—</td>";
+      }
+      if (showAmort) {
+        html +=
+          sc.amort && !sc.amort.ratesOnly
+            ? "<td>" + escapeHtml(formatNum(sc.amort.jahre, 1)) + "</td>"
+            : "<td>—</td>";
+      }
+      html += "</tr>";
+    }
+    html += "</tbody></table>" + para(t("modell.caption"), "modell-caption");
     return html;
   }
 
-  function renderAfaBody(routed) {
-    if (routed.afa && routed.afa.blocked) {
-      return "<p>" + escapeHtml(t("afa.needYear")) + "</p>";
-    }
-    return (
-      "<p>" +
-      escapeHtml(t("afa.satzLabel")) +
-      ": <strong>" +
-      escapeHtml(formatPct(routed.afa.satzPct)) +
-      "</strong> " +
-      escapeHtml(t("afa.perYear")) +
-      ".</p><p class=\"note\">" +
-      escapeHtml(t("deg5a.outOfScope")) +
-      "</p>"
-    );
-  }
+  function renderRechenbeispieleBody(routed) {
+    var html = renderScenarioTable(routed);
 
-  function renderKpaBody(routed) {
-    var html =
+    html +=
       "<p>" +
       escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
       " " +
-      termBtn("arbeitshilfe", "Arbeitshilfe") +
+      termBtn("arbeitshilfe", t("glossary.arbeitshilfe")) +
       "</p>";
+
     if (routed.kpaCompare) {
       html +=
-        "<ul><li>A: " +
+        "<h3>" +
+        escapeHtml(t("kpa.compareTitle")) +
+        "</h3><ul><li>A: " +
         escapeHtml(formatPct(routed.kpaCompare.a.splitPct)) +
         " → " +
         escapeHtml(formatEuro(routed.kpaCompare.a.gebaeudeanteilEur)) +
@@ -426,66 +473,54 @@
         escapeHtml(formatEuro(routed.kpaCompare.b.gebaeudeanteilEur)) +
         "</li></ul>";
     }
-    if (routed.handoff && routed.handoff.kpa) {
-      html += renderCta("kpa", "primary", "cta.kpa", "button");
-    }
+
+    html +=
+      '<details class="rechtslage-box"><summary>' +
+      escapeHtml(t("details.hintergrund")) +
+      "</summary><p>" +
+      escapeHtml(t("rnd.rechtslage")) +
+      "</p></details>";
+
     return html;
   }
 
-  function renderAusweisBody(routed) {
-    var key = "geg.keinAnlass";
-    if (routed.rolle === "mieter") key = "mieter.ausweisOnly";
-    else if (routed.geg === "pflicht_orientierung") key = "geg.pflicht";
-    else if (routed.geg === "ausnahme_pruefen") key = "geg.ausnahme";
-    else if (routed.geg === "vorhanden") key = "geg.vorhanden";
-    var html = "<p>" + escapeHtml(t(key)) + "</p>";
-    if (routed.rolle === "mieter") {
-      html += "<p class=\"note\">" + escapeHtml(t("mieter.forward")) + "</p>";
-    }
-    if (routed.handoff && routed.handoff.ausweis) {
-      html += renderCta("ausweis", "primary", "cta.ausweis", "button");
-    }
-    return html;
-  }
+  /** One hero CTA. suppress never links RND; widen only ever gets a text link. */
+  function renderNextStep(routed, path) {
+    var rolle = routed.rolle;
+    var handoff = routed.handoff || {};
+    var html = "<h2>" + escapeHtml(t("q4.title")) + "</h2>";
 
-  function strongestCta(routed) {
+    function ausweisCta() {
+      // Mieter never gets a hero button: there is nothing to save here.
+      return rolle === "mieter"
+        ? renderCta("ausweis", "primary", "cta.ausweisText", "text")
+        : renderCta("ausweis", "primary", "cta.ausweis", "button");
+    }
+
+    if (path === "ausweis") {
+      if (handoff.ausweis) html += ausweisCta();
+      else if (handoff.kpa) html += renderCta("kpa", "primary", "cta.kpa", "button");
+      return html;
+    }
+
     if (routed.rndCta && routed.rndCta.primary) {
-      return renderCta("rnd", "primary", "cta.rndPrimary", "button");
+      html += renderCta("rnd", "primary", "cta.rndPrimary", "button");
+    } else if (handoff.kpa) {
+      html += renderCta("kpa", "primary", "cta.kpa", "button");
+    } else if (handoff.ausweis) {
+      html += ausweisCta();
     }
-    if (routed.handoff && routed.handoff.kpa) {
-      return renderCta("kpa", "primary", "cta.kpa", "button");
-    }
-    if (routed.handoff && routed.handoff.ausweis) {
-      return renderCta("ausweis", "primary", "cta.ausweis", "button");
-    }
-    if (routed.rndCta && routed.rndCta.secondaryText) {
-      return renderCta("rnd", "secondary", "cta.rndSecondary", "text");
-    }
-    return "";
-  }
 
-  function defaultExpanded(routed) {
-    if (routed.cards.rnd) return "rnd";
-    if (routed.cards.ausweis) return "ausweis";
-    if (routed.cards.afa) return "afa";
-    if (routed.cards.kpa) return "kpa";
-    return "ausweis";
+    if (routed.rndCta && routed.rndCta.secondaryText) {
+      html += renderCta("rnd", "secondary", "cta.rndSecondary", "text");
+    }
+    return html;
   }
 
   function assertNoForbidden(text) {
-    var forbidden = [
-      "Ihre Restnutzungsdauer",
-      "landet bei",
-      "typischerweise 20–30",
-      "Anerkennungsquote",
-      "Steuerspar-Garantie",
-      "gute Erfolgsaussicht",
-      "Optimierung",
-      "Garantierte",
-    ];
-    for (var i = 0; i < forbidden.length; i++) {
-      if (text.indexOf(forbidden[i]) !== -1) {
-        console.error("Forbidden string:", forbidden[i]);
+    for (var i = 0; i < FORBIDDEN.length; i++) {
+      if (text.indexOf(FORBIDDEN[i]) !== -1) {
+        console.error("Forbidden string in rendered output:", FORBIDDEN[i]);
       }
     }
   }
@@ -493,84 +528,34 @@
   function renderAll() {
     if (!state.ready) return;
     var facts = readFacts();
-    var unlockState = unlock(facts);
+    var unlocked = unlock(facts);
 
-    if (!facts.rolle || !unlockState.showInsight) {
+    if (!unlocked.showInsight) {
       $("q3-body").innerHTML = "";
       $("q4-body").innerHTML = "";
+      $("rechenbeispiele-body").innerHTML = "";
       return;
     }
 
     var routed = NC.route(facts, state.ruleset);
-    if (!state.expanded || !routed.cards[state.expanded]) {
-      state.expanded = defaultExpanded(routed);
+
+    if (unlocked.path === "afa") {
+      $("q3-body").innerHTML = renderLagebild(routed);
+      $("rechenbeispiele-body").innerHTML = renderRechenbeispieleBody(routed);
+    } else {
+      $("q3-body").innerHTML = renderRoleLesson(routed);
+      $("rechenbeispiele-body").innerHTML = "";
     }
 
-    var html = "";
-    if (unlockState.path === "afa") {
-      html += renderLagebild(routed);
-    }
+    $("q4-body").innerHTML = renderNextStep(routed, unlocked.path);
 
-    html += '<div class="tiles">';
-    if (routed.cards.afa) {
-      html += tileShell(
-        "afa",
-        t("section.afa"),
-        routed.afa && !routed.afa.blocked
-          ? escapeHtml(formatPct(routed.afa.satzPct))
-          : "—",
-        renderAfaBody(routed),
-        state.expanded === "afa"
-      );
-    }
-    if (routed.cards.rnd) {
-      var nd30 = scenarioById(routed, "nd30");
-      var cash = "";
-      if (nd30 && nd30.mehrAfa && !nd30.mehrAfa.ratesOnly) {
-        cash = " · " + escapeHtml(formatEuro(nd30.mehrAfa.mehrAfaEur));
-      }
-      html += tileShell(
-        "rnd",
-        t("section.rnd"),
-        escapeHtml(postureLabel(routed.rndPosture)) + cash,
-        renderRndBody(routed),
-        state.expanded === "rnd"
-      );
-    }
-    if (routed.cards.kpa) {
-      html += tileShell(
-        "kpa",
-        t("section.kpa"),
-        escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 64) + "…",
-        renderKpaBody(routed),
-        state.expanded === "kpa"
-      );
-    }
-    if (routed.cards.ausweis) {
-      var aKey = routed.rolle === "mieter" ? "mieter.ausweisOnly" : "geg.pflicht";
-      if (routed.rolle !== "mieter") {
-        if (routed.geg === "vorhanden") aKey = "geg.vorhanden";
-        else if (routed.geg === "kein_anlass") aKey = "geg.keinAnlass";
-        else if (routed.geg === "ausnahme_pruefen") aKey = "geg.ausnahme";
-      }
-      html += tileShell(
-        "ausweis",
-        t("section.ausweis"),
-        escapeHtml(t(aKey)).slice(0, 64) + "…",
-        renderAusweisBody(routed),
-        state.expanded === "ausweis"
-      );
-    }
-    html += "</div>";
-
-    $("q3-body").innerHTML = html;
-    $("q4-body").innerHTML =
-      "<h2>" +
-      escapeHtml(t("q4.title")) +
-      "</h2>" +
-      strongestCta(routed);
-
-    assertNoForbidden(($("q3-body").innerText || "") + ($("q4-body").innerText || ""));
+    assertNoForbidden(
+      ($("q3-body").textContent || "") +
+        "\n" +
+        ($("rechenbeispiele-body").textContent || "") +
+        "\n" +
+        ($("q4-body").textContent || "")
+    );
   }
 
   function hidePopover() {
@@ -580,16 +565,14 @@
   }
 
   function showPopover(btn) {
-    var term = btn.getAttribute("data-term");
-    var key = "glossary." + term;
     var pop = $("term-popover");
-    pop.textContent = t(key);
+    pop.textContent = t("glossary." + btn.getAttribute("data-term"));
     pop.hidden = false;
     var rect = btn.getBoundingClientRect();
-    var top = rect.bottom + window.scrollY + 6;
-    var left = rect.left + window.scrollX;
-    pop.style.top = top + "px";
-    pop.style.left = Math.min(left, window.scrollX + window.innerWidth - 300) + "px";
+    pop.style.top = rect.bottom + window.scrollY + 6 + "px";
+    pop.style.left =
+      Math.min(rect.left + window.scrollX, window.scrollX + window.innerWidth - 300) +
+      "px";
   }
 
   function resetRole() {
@@ -598,8 +581,42 @@
     $("nutzung").value = "";
     $("fertigstellungJahr").value = "";
     $("modernisierungJahr").value = "";
+
+    var unbekannt = document.querySelector(
+      'input[name="modernisierung"][value="unbekannt"]'
+    );
+    if (unbekannt) unbekannt.checked = true;
+    var ausweisUnbekannt = document.querySelector(
+      'input[name="ausweis"][value="unbekannt"]'
+    );
+    if (ausweisUnbekannt) ausweisUnbekannt.checked = true;
+    var halten = document.querySelector(
+      'input[name="vermieter_anlass"][value="halten"]'
+    );
+    if (halten) halten.checked = true;
+    var gutachten = $("gutachtenVorhanden");
+    if (gutachten) gutachten.checked = false;
+
+    var money = [
+      "gebaeudeanteilEur",
+      "kaufpreisEur",
+      "splitPct",
+      "grenzsatzPct",
+      "honorarEur",
+      "splitPctA",
+      "splitPctB",
+    ];
+    for (var i = 0; i < money.length; i++) {
+      var el = $(money[i]);
+      if (el) el.value = "";
+    }
+
+    closeDetails("zahlen-details");
+    closeDetails("rechenbeispiele");
+    closeDetails("gutachter-details");
+
     state.buyOpen = false;
-    state.expanded = "rnd";
+    $("main").setAttribute("data-phase", "start");
     hidePopover();
     renderAll();
   }
@@ -610,7 +627,7 @@
     renderAll();
   }
 
-  /** Fill every data-copy / data-copy-placeholder / data-copy-aria node from copy.de.json. */
+  /** Fill every data-copy / data-copy-placeholder / data-copy-aria node. */
   function applyCopyBindings() {
     var text = document.querySelectorAll("[data-copy]");
     for (var i = 0; i < text.length; i++) {
@@ -627,44 +644,66 @@
     for (var k = 0; k < aria.length; k++) {
       aria[k].setAttribute("aria-label", t(aria[k].getAttribute("data-copy-aria")));
     }
-  }
-
-  function renderFooter() {
-    var name = t("product.name");
-    document.title = name;
-    var version = state.ruleset ? state.ruleset.version : "—";
-    var stand = state.ruleset ? state.ruleset.stand : "—";
-    $("footer-meta").textContent =
-      name + " · " + version + " · " + stand + " · " + t("footer.disclaimer");
-    $("footer-disclaimer").textContent = t("footer.disclaimer");
-    $("rechtslage-body").textContent = t("rnd.rechtslage");
-    $("impressum-body").innerHTML =
-      escapeHtml(t("impressum.betreiber")) +
-      "<br>" +
-      escapeHtml(t("impressum.anschrift")) +
-      "<br>" +
-      escapeHtml(t("impressum.kontakt")) +
-      "<br>" +
-      escapeHtml(t("impressum.ustId")) +
-      "<br>" +
-      escapeHtml(t("impressum.verantwortlich"));
-    $("datenschutz-body").innerHTML =
-      "<p>" +
-      escapeHtml(t("datenschutz.keinObjektbezug")) +
-      "</p><p>" +
-      escapeHtml(t("datenschutz.hosterHinweis")) +
-      "</p><p>" +
-      escapeHtml(t("legal.keineSteuerberatung")) +
-      "</p>";
-    applyCopyBindings();
     var presets = document.querySelectorAll("[data-set-grenz]");
-    for (var i = 0; i < presets.length; i++) {
-      var pct = presets[i].getAttribute("data-set-grenz");
-      presets[i].textContent = t("annahme.presetGrenz").split("{pct}").join(pct);
+    for (var p = 0; p < presets.length; p++) {
+      presets[p].textContent = t("annahme.presetGrenz")
+        .split("{pct}")
+        .join(presets[p].getAttribute("data-set-grenz"));
     }
     var hPreset = document.querySelector("[data-set-honorar]");
     if (hPreset) hPreset.textContent = t("annahme.presetHonorar");
+  }
+
+  function renderChrome() {
+    var name = t("product.name");
+    document.title = name;
+    $("brand").textContent = name;
+    var version = state.ruleset ? state.ruleset.version : "—";
+    var stand = state.ruleset ? state.ruleset.stand : "—";
+    $("footer-meta").textContent =
+      name +
+      " · " +
+      version +
+      " · " +
+      stand +
+      " · " +
+      t("footer.disclaimer") +
+      " " +
+      t("legal.keineSteuerberatung");
+    $("footer-disclaimer").textContent = t("footer.disclaimer");
+    $("rechtslage-body").textContent = t("rnd.rechtslage");
+    $("impressum-body").innerHTML = [
+      escapeHtml(t("impressum.betreiber")),
+      escapeHtml(t("impressum.anschrift")),
+      escapeHtml(t("impressum.kontakt")),
+      escapeHtml(t("impressum.ustId")),
+      escapeHtml(t("impressum.verantwortlich")),
+    ].join("<br>");
+    $("datenschutz-body").innerHTML =
+      para(t("datenschutz.keinObjektbezug")) +
+      para(t("datenschutz.hosterHinweis")) +
+      para(t("legal.keineSteuerberatung"));
+    applyCopyBindings();
     NC.skin.apply(state.skin, t);
+  }
+
+  function bindPrint() {
+    window.addEventListener("beforeprint", function () {
+      var all = document.querySelectorAll("details");
+      var restore = [];
+      for (var i = 0; i < all.length; i++) {
+        restore.push({ el: all[i], open: all[i].open });
+        all[i].open = true;
+      }
+      state.printRestore = restore;
+    });
+    window.addEventListener("afterprint", function () {
+      var restore = state.printRestore || [];
+      for (var i = 0; i < restore.length; i++) {
+        restore[i].el.open = restore[i].open;
+      }
+      state.printRestore = null;
+    });
   }
 
   function bindUi() {
@@ -684,8 +723,8 @@
       if (!btn) return;
       if (btn.getAttribute("data-role-group") === "kaufen") {
         state.buyOpen = true;
-        $("buy-split").hidden = false;
-        $("role-grid").hidden = true;
+        setHidden("buy-split", false);
+        setHidden("role-grid", true);
         return;
       }
       var rolle = btn.getAttribute("data-role");
@@ -698,8 +737,8 @@
     });
     $("buy-back").addEventListener("click", function () {
       state.buyOpen = false;
-      $("buy-split").hidden = true;
-      $("role-grid").hidden = false;
+      setHidden("buy-split", true);
+      setHidden("role-grid", false);
     });
     $("role-back").addEventListener("click", resetRole);
 
@@ -713,11 +752,6 @@
       }
       if (!$("term-popover").hidden && !e.target.closest("#term-popover")) {
         hidePopover();
-      }
-      var expand = e.target.closest("[data-expand]");
-      if (expand) {
-        state.expanded = expand.getAttribute("data-expand");
-        renderAll();
       }
       var g = e.target.closest("[data-set-grenz]");
       if (g) {
@@ -735,6 +769,7 @@
       if (e.key === "Escape") hidePopover();
     });
 
+    bindPrint();
     updateModJahrVisibility();
   }
 
@@ -765,12 +800,12 @@
         });
       }),
     ])
-      .then(function (pair) {
-        state.ruleset = pair[0];
-        state.copy = pair[1];
-        state.skin = pair[3] || {};
+      .then(function (loaded) {
+        state.ruleset = loaded[0];
+        state.copy = loaded[1];
+        state.skin = loaded[3] || {};
         state.ready = true;
-        renderFooter();
+        renderChrome();
         bindUi();
         renderAll();
       })
