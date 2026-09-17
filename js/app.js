@@ -252,9 +252,9 @@
       .join(String(routed.afa.satzPct).replace(".", ","))
       .split("{ndJahre}")
       .join(String(routed.afa.gesetzlicheNdJahre));
-    var beat4Key = "lagebild.beat4.pruefen";
-    if (routed.rndPosture === "widen") beat4Key = "lagebild.beat4.unsicher";
-    if (routed.rndPosture === "suppress") beat4Key = "lagebild.beat4.unwirtschaftlich";
+    var postureBodyKey = "posture.body.pruefen";
+    if (routed.rndPosture === "widen") postureBodyKey = "posture.body.unsicher";
+    if (routed.rndPosture === "suppress") postureBodyKey = "posture.body.unwirtschaftlich";
     return (
       '<section class="lagebild" id="lagebild">' +
       "<h2>" +
@@ -283,7 +283,14 @@
       termBtn("szenario_nd", "Szenario ND") +
       "</p>" +
       "<p>" +
-      escapeHtml(t(beat4Key)) +
+      escapeHtml(t("lagebild.beat4")) +
+      "</p>" +
+      '<p class="posture"><strong>' +
+      escapeHtml(t("posture.lead")) +
+      ": " +
+      escapeHtml(postureLabel(routed.rndPosture)) +
+      "</strong> " +
+      escapeHtml(t(postureBodyKey)) +
       "</p>" +
       "</section>"
     );
@@ -318,10 +325,7 @@
   }
 
   function renderRndBody(routed) {
-    var html =
-      '<p class="note note-strong">' +
-      escapeHtml(postureLabel(routed.rndPosture)) +
-      "</p>";
+    var html = "";
     if (routed.rndPosture === "suppress") {
       html += "<p class=\"note\">" + escapeHtml(t("rnd.unwirtschaftlich")) + "</p>";
     } else if (routed.rndPosture === "widen") {
@@ -332,7 +336,11 @@
     var showAmort = routed.honorarEur != null && showTax;
     if (routed.scenarios && routed.scenarios.length) {
       html +=
-        '<table class="scenarios"><thead><tr><th>Szenario</th><th>Satz</th>';
+        '<table class="scenarios"><thead><tr><th>' +
+        escapeHtml(t("table.szenario")) +
+        "</th><th>" +
+        escapeHtml(t("table.satz")) +
+        "</th>";
       if (routed.gebaeudeanteilEur != null) html += "<th>" + escapeHtml(t("label.mehrAfa")) + "</th>";
       if (showTax) html += "<th>" + escapeHtml(t("label.steuerCash")) + "</th>";
       if (showAmort) html += "<th>" + escapeHtml(t("label.amort")) + "</th>";
@@ -372,7 +380,9 @@
     }
 
     html +=
-      '<details class="rechtslage-box"><summary>Hintergrund</summary><p>' +
+      '<details class="rechtslage-box"><summary>' +
+      escapeHtml(t("details.hintergrund")) +
+      "</summary><p>" +
       escapeHtml(t("rnd.rechtslage")) +
       "</p></details>";
 
@@ -474,6 +484,8 @@
       "Anerkennungsquote",
       "Steuerspar-Garantie",
       "gute Erfolgsaussicht",
+      "Optimierung",
+      "Garantierte",
     ];
     for (var i = 0; i < forbidden.length; i++) {
       if (text.indexOf(forbidden[i]) !== -1) {
@@ -507,7 +519,7 @@
     if (routed.cards.afa) {
       html += tileShell(
         "afa",
-        t("tile.afa"),
+        t("section.afa"),
         routed.afa && !routed.afa.blocked
           ? escapeHtml(formatPct(routed.afa.satzPct))
           : "—",
@@ -523,7 +535,7 @@
       }
       html += tileShell(
         "rnd",
-        t("tile.rnd"),
+        t("section.rnd"),
         escapeHtml(postureLabel(routed.rndPosture)) + cash,
         renderRndBody(routed),
         state.expanded === "rnd"
@@ -532,7 +544,7 @@
     if (routed.cards.kpa) {
       html += tileShell(
         "kpa",
-        t("tile.kpa"),
+        t("section.kpa"),
         escapeHtml(t("kpa.arbeitshilfeVsGutachten")).slice(0, 64) + "…",
         renderKpaBody(routed),
         state.expanded === "kpa"
@@ -547,7 +559,7 @@
       }
       html += tileShell(
         "ausweis",
-        t("tile.ausweis"),
+        t("section.ausweis"),
         escapeHtml(t(aKey)).slice(0, 64) + "…",
         renderAusweisBody(routed),
         state.expanded === "ausweis"

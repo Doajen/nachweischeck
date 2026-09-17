@@ -19,6 +19,8 @@ const FORBIDDEN = [
   "Anerkennungsquote",
   "Steuerspar-Garantie",
   "gute Erfolgsaussicht",
+  "Optimierung",
+  "Garantierte",
 ];
 
 function assertClean(text) {
@@ -35,15 +37,17 @@ function buildLagebild(routed) {
   const beat1 = copy["lagebild.beat1"]
     .replace("{satzPct}", String(routed.afa.satzPct).replace(".", ","))
     .replace("{ndJahre}", String(routed.afa.gesetzlicheNdJahre));
-  let beat4 = copy["lagebild.beat4.pruefen"];
-  if (routed.rndPosture === "widen") beat4 = copy["lagebild.beat4.unsicher"];
+  let postureBody = copy["posture.body.pruefen"];
+  if (routed.rndPosture === "widen") postureBody = copy["posture.body.unsicher"];
   if (routed.rndPosture === "suppress")
-    beat4 = copy["lagebild.beat4.unwirtschaftlich"];
+    postureBody = copy["posture.body.unwirtschaftlich"];
   return [
     beat1,
     copy["lagebild.beat2"],
     copy["lagebild.beat3"],
-    beat4,
+    copy["lagebild.beat4"],
+    copy["posture.lead"],
+    postureBody,
     copy["posture.pruefen"],
     copy["posture.unsicher"],
     copy["posture.unwirtschaftlich"],
@@ -99,11 +103,76 @@ describe("forbidden copy strings", () => {
       "glossary.grenzsatz",
       "glossary.arbeitshilfe",
       "glossary.energieausweis",
+      "glossary.modellrechnung",
     ];
     for (const k of keys) {
       assert.ok(copy[k] && copy[k].length > 10, k);
       assertClean(copy[k]);
     }
+  });
+
+  it("role subtitles and role lessons are educational and clean", () => {
+    const keys = [
+      "role.vermieter.sub",
+      "role.kaufen.sub",
+      "role.kaeufer_vermiet.sub",
+      "role.kaeufer_eigen.sub",
+      "role.verkaeufer.sub",
+      "role.mieter.sub",
+      "lesson.verkaeufer",
+      "lesson.kaeufer_eigen",
+      "lesson.mieter",
+    ];
+    for (const k of keys) {
+      assert.ok(copy[k] && copy[k].length > 10, k);
+      assertClean(copy[k]);
+    }
+  });
+});
+
+describe("copy / copyKeys parity", () => {
+  it("every copyKeys entry exists in copy.de.json", () => {
+    const missing = ruleset.copyKeys.filter((k) => !(k in copy));
+    assert.deepEqual(missing, []);
+  });
+
+  it("every copy.de.json key is declared in copyKeys", () => {
+    const declared = new Set(ruleset.copyKeys);
+    const undeclared = Object.keys(copy).filter((k) => !declared.has(k));
+    assert.deepEqual(undeclared, []);
+  });
+
+  it("removed keys stay removed", () => {
+    for (const k of [
+      "persist.label",
+      "persist.clear",
+      "datenschutz.optionalPersist",
+      "lagebild.beat4.pruefen",
+      "lagebild.beat4.unsicher",
+      "lagebild.beat4.unwirtschaftlich",
+      "tile.afa",
+      "tile.rnd",
+      "tile.kpa",
+      "tile.ausweis",
+    ]) {
+      assert.equal(k in copy, false, `${k} must be gone from copy`);
+      assert.equal(
+        ruleset.copyKeys.includes(k),
+        false,
+        `${k} must be gone from copyKeys`
+      );
+    }
+  });
+});
+
+describe("Lagebild beat 4 carries the withdrawn BMF reference", () => {
+  it("names both BMF dates and the file number", () => {
+    const beat4 = copy["lagebild.beat4"];
+    assert.ok(beat4.includes("22.02.2023"), "cites the withdrawn Schreiben");
+    assert.ok(beat4.includes("01.12.2025"), "cites the withdrawal");
+    assert.ok(beat4.includes("IV C 3 – S 2196/00040/006/008"), "cites the Aktenzeichen");
+    assert.ok(beat4.includes("ImmoWertV"), "separates valuation from tax ND");
+    assertClean(beat4);
   });
 });
 
