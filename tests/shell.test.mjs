@@ -21,6 +21,16 @@ describe("beat shell", () => {
     assert.equal(html.includes("quad"), false);
   });
 
+  it("carries no second lesson block in Q2", () => {
+    assert.equal(html.includes("q2-edu"), false);
+    assert.equal(html.includes("q2.title.orientierung"), false);
+    assert.equal(
+      (html.match(/data-copy="q3\.lessonTitle"/g) || []).length,
+      0,
+      "the lesson heading is rendered by app.js, not duplicated in markup"
+    );
+  });
+
   it("has no tile grid markup", () => {
     assert.equal(html.includes('class="tiles"'), false);
     assert.equal(html.includes('class="tile"'), false);

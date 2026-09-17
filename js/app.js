@@ -238,7 +238,6 @@
 
     setHidden("q2-object-fields", !afaPath);
     setHidden("year-field", !afaPath);
-    setHidden("q2-edu", !ausweisPath);
 
     // Beat 2: nothing beyond the year until the year is a finite integer.
     setHidden("mod-group", !(afaPath && haveYear));
@@ -248,11 +247,6 @@
 
     $("role-badge").textContent =
       t("role.badgePrefix") + " " + t("role." + rolle);
-
-    if (ausweisPath) {
-      $("q2-edu-text").textContent =
-        rolle === "mieter" ? t("mieter.ausweisOnly") : t("edu.ausweisPath");
-    }
 
     setBeatOpen("q3-insight", showInsight);
     setBeatOpen("q4-next", showInsight);
@@ -316,15 +310,14 @@
       "<h2>" +
       escapeHtml(t("lagebild.title")) +
       " " +
-      termBtn("afa", t("glossary.afa")) +
-      " " +
       termBtn("rnd", t("glossary.rnd")) +
       "</h2>" +
       para(t("modell.caption"), "modell-caption") +
+      // gesetzliche Größe already has a (?) on the Fertigstellungsjahr field.
       "<p>" +
       escapeHtml(beat1) +
       " " +
-      termBtn("gesetzliche_groesse", t("glossary.gesetzliche_groesse")) +
+      termBtn("afa", t("glossary.afa")) +
       "</p>" +
       "<p>" +
       escapeHtml(t("lagebild.beat2")) +
@@ -351,8 +344,7 @@
       html += para(t("rnd.widenNote"), "note");
     }
 
-    html +=
-      para(t("deg5a.outOfScope"), "meta") + para(t("scope.outOfScope"), "meta");
+    // Scope caveats live in the Hintergrund details, not on first paint.
     return html + "</section>";
   }
 
@@ -449,15 +441,31 @@
     return html;
   }
 
-  function renderRechenbeispieleBody(routed) {
+  /**
+   * The Kaufpreisaufteilung caveat belongs to the KPA path, not to every
+   * Rechenbeispiel: a Vermieter who only holds and typed a Gebäudeanteil never
+   * asked about splitting a purchase price.
+   */
+  function kpaInPlay(facts, routed) {
+    return (
+      facts.rolle === "kaeufer_vermiet" ||
+      facts.anlass === "kaufen" ||
+      Number.isFinite(facts.splitPct) ||
+      routed.kpaCompare != null
+    );
+  }
+
+  function renderRechenbeispieleBody(routed, showKpaNote) {
     var html = renderScenarioTable(routed);
 
-    html +=
-      "<p>" +
-      escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
-      " " +
-      termBtn("arbeitshilfe", t("glossary.arbeitshilfe")) +
-      "</p>";
+    if (showKpaNote) {
+      html +=
+        "<p>" +
+        escapeHtml(t("kpa.arbeitshilfeVsGutachten")) +
+        " " +
+        termBtn("arbeitshilfe", t("glossary.arbeitshilfe")) +
+        "</p>";
+    }
 
     if (routed.kpaCompare) {
       html +=
@@ -477,9 +485,11 @@
     html +=
       '<details class="rechtslage-box"><summary>' +
       escapeHtml(t("details.hintergrund")) +
-      "</summary><p>" +
-      escapeHtml(t("rnd.rechtslage")) +
-      "</p></details>";
+      "</summary>" +
+      para(t("rnd.rechtslage")) +
+      para(t("deg5a.outOfScope"), "meta") +
+      para(t("scope.outOfScope"), "meta") +
+      "</details>";
 
     return html;
   }
@@ -541,7 +551,10 @@
 
     if (unlocked.path === "afa") {
       $("q3-body").innerHTML = renderLagebild(routed);
-      $("rechenbeispiele-body").innerHTML = renderRechenbeispieleBody(routed);
+      $("rechenbeispiele-body").innerHTML = renderRechenbeispieleBody(
+        routed,
+        kpaInPlay(facts, routed)
+      );
     } else {
       $("q3-body").innerHTML = renderRoleLesson(routed);
       $("rechenbeispiele-body").innerHTML = "";

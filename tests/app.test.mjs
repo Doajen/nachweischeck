@@ -98,9 +98,65 @@ describe("Q3 render", () => {
   it("puts the scenario table inside the Rechenbeispiele body", () => {
     assert.match(
       app,
-      /\$\("rechenbeispiele-body"\)\.innerHTML = renderRechenbeispieleBody\(routed\)/
+      /\$\("rechenbeispiele-body"\)\.innerHTML = renderRechenbeispieleBody\(/
     );
     assert.match(app, /function renderRechenbeispieleBody[\s\S]{0,80}renderScenarioTable/);
+  });
+
+  it("shows one glossary button on the Lagebild heading, not a row of them", () => {
+    const heading = app.slice(
+      app.indexOf('escapeHtml(t("lagebild.title"))'),
+      app.indexOf('para(t("modell.caption")')
+    );
+    assert.equal(
+      (heading.match(/termBtn\(/g) || []).length,
+      1,
+      "the Lagebild heading carries exactly one (?)"
+    );
+  });
+
+  it("keeps the scope caveats off first paint, inside Hintergrund", () => {
+    const lagebild = app.slice(
+      app.indexOf("function renderLagebild"),
+      app.indexOf("function renderRoleLesson")
+    );
+    assert.equal(lagebild.includes("deg5a.outOfScope"), false);
+    assert.equal(lagebild.includes("scope.outOfScope"), false);
+
+    const hintergrund = app.slice(
+      app.indexOf('t("details.hintergrund")'),
+      app.indexOf("function renderNextStep")
+    );
+    assert.ok(hintergrund.includes("deg5a.outOfScope"));
+    assert.ok(hintergrund.includes("scope.outOfScope"));
+    assert.ok(hintergrund.includes("rnd.rechtslage"));
+  });
+
+  it("shows the Arbeitshilfe caveat only when the KPA path is in play", () => {
+    assert.match(app, /function kpaInPlay/);
+    const gate = app.slice(app.indexOf("function kpaInPlay"), app.indexOf("function renderRechenbeispieleBody"));
+    assert.ok(gate.includes('facts.rolle === "kaeufer_vermiet"'));
+    assert.ok(gate.includes('facts.anlass === "kaufen"'));
+    assert.ok(gate.includes("Number.isFinite(facts.splitPct)"));
+    assert.ok(gate.includes("routed.kpaCompare != null"));
+    // A bare Gebäudeanteil must not switch it on.
+    assert.equal(gate.includes("gebaeudeanteilEur"), false);
+    assert.match(app, /if \(showKpaNote\) \{/);
+  });
+
+  it("teaches the Mieter lesson once, in Q3 only", () => {
+    assert.equal(app.includes("q2-edu"), false, "the Q2 lesson block is gone");
+    assert.equal(app.includes("q2.title.orientierung"), false);
+    const lesson = app.slice(
+      app.indexOf("function renderRoleLesson"),
+      app.indexOf("function renderScenarioTable")
+    );
+    assert.ok(lesson.includes("q3.lessonTitle"));
+    assert.equal(
+      (app.match(/mieter\.ausweisOnly/g) || []).length,
+      1,
+      "mieter.ausweisOnly is rendered in exactly one place"
+    );
   });
 
   it("guards the rendered output against all eight forbidden strings", () => {
